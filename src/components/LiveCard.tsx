@@ -56,8 +56,18 @@ export default function LiveCard({
     setIsStopped(!showVideo); // if video was on, now it's stopped
   };
 
+  //send to target pc
   const sendMessage = async (message: string) => {
     await fetch(`${api}/send-message?pc_name=${pc}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pc, text: message }),
+    });
+  };
+
+  //send to all pc
+  const sendMessageToAll = async (message: string) => {
+    await fetch(`${api}/send-message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pc, text: message }),
@@ -984,6 +994,7 @@ const getStatusColor = () => {
         open={msgOpen}
         onClose={() => setMsgOpen(false)}
         onSend={sendMessage}
+        onSendToAll={sendMessageToAll}
       />
     </div>
   );
