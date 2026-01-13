@@ -13,7 +13,7 @@ export function useWebRTC(pcName: string, autoConnect: boolean = true) {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const viewerIdRef = useRef<string | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userInteractionHandlerRef = useRef<(() => void) | null>(null);
   const isInitializedRef = useRef(false);
 

@@ -36,6 +36,7 @@ export default function LiveCard({
   } | null>(null);
   const [showControls, setShowControls] = useState(true);
   const commandsMenuRef = useRef<HTMLDivElement>(null);
+  const [isStopped, setIsStopped] = useState(false);
 
   const {
     videoRef,
@@ -49,6 +50,11 @@ export default function LiveCard({
     handleManualPlay,
     toggleVideo,
   } = useWebRTC(pc, autoConnect);
+
+  const handleToggleVideo = () => {
+    toggleVideo(); // existing function from useWebRTC
+    setIsStopped(!showVideo); // if video was on, now it's stopped
+  };
 
   const sendMessage = async (message: string) => {
     await fetch(`${api}/send-message?pc_name=${pc}`, {
@@ -189,21 +195,23 @@ export default function LiveCard({
   }, [showCommandsMenu]);
 
   const getStatusText = () => {
-    if (!showVideo) return "OFFLINE";
-    if (connectionStatus === "connected" && isVideoActive) return "LIVE";
-    if (connectionStatus === "connected") return "READY";
-    if (connectionStatus === "connecting") return "CONNECTING";
-    return "OFFLINE";
-  };
+  if (connectionStatus === "offline") return "PC OFF";
+  if (!showVideo) return "STREAMING OFF";
+  if (connectionStatus === "connected" && isVideoActive) return "LIVE";
+  if (connectionStatus === "connected") return "READY";
+  if (connectionStatus === "connecting") return "CONNECTING";
+  return "OFFLINE";
+};
 
-  const getStatusColor = () => {
-    if (!showVideo) return "bg-gray-500";
-    if (connectionStatus === "connected" && isVideoActive)
-      return "bg-green-500";
-    if (connectionStatus === "connected") return "bg-yellow-500";
-    if (connectionStatus === "connecting") return "bg-blue-500";
-    return "bg-gray-500";
-  };
+const getStatusColor = () => {
+  if (connectionStatus === "offline") return "bg-red-500"; // PC OFF
+  if (!showVideo) return "bg-green-500"; // Streaming OFF
+  if (connectionStatus === "connected" && isVideoActive) return "bg-green-500"; // LIVE
+  if (connectionStatus === "connected") return "bg-yellow-500"; // READY
+  if (connectionStatus === "connecting") return "bg-blue-500"; // CONNECTING
+  return "bg-gray-500"; // fallback
+};
+
 
   // Performance label component for fullscreen
   const PerformanceLabel = ({
@@ -373,7 +381,7 @@ export default function LiveCard({
 
           {/* Stream toggle */}
           <button
-            onClick={toggleVideo}
+            onClick={handleToggleVideo}
             className={`flex items-center justify-center p-3 backdrop-blur-sm rounded-full transition ${
               showVideo
                 ? "bg-red-600/80 hover:bg-red-700/80 text-white"
@@ -382,13 +390,12 @@ export default function LiveCard({
             title={showVideo ? "Stop Stream" : "Start Stream"}
           >
             <svg
-              className="w-5 h-5" // bigger than before, you can adjust
+              className="w-5 h-5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
             >
               {showVideo ? (
-                // Circle for "stop" / live indicator
                 <circle
                   cx="12"
                   cy="12"
@@ -397,7 +404,6 @@ export default function LiveCard({
                   stroke="currentColor"
                 />
               ) : (
-                // Play triangle
                 <polygon points="9,7 17,12 9,17" fill="currentColor" />
               )}
             </svg>
@@ -671,7 +677,7 @@ export default function LiveCard({
             >
               <path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" />
             </svg>
-            <span className="text-sm text-gray-400">PC Offline</span>
+            <span className="text-sm text-gray-400">{connectionStatus === "offline" ? "PC Offline" : "Monitoring is OFF"}</span>
           </div>
         )}
 

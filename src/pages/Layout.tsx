@@ -185,10 +185,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="text-gray-300">Offline:</span>
               <span className="text-white font-semibold">0</span>
             </div>
-            <div className="ml-auto flex items-center gap-2">
+            {/* <div className="ml-auto flex items-center gap-2">
               <span className="text-gray-300">Last Updated:</span>
               <span className="text-white font-semibold">Just now</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
