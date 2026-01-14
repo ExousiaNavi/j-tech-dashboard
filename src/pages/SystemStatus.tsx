@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { WS_URL, API_URL } from "../config";
 import SystemStatusCard from "../components/SystemStatusCard";
+import { useWS } from "../context/WebSocketContext";
 
 interface NetworkUsage {
   upload_kbps: number;
@@ -66,16 +67,17 @@ interface PCStatus {
 }
 
 export default function SystemStatus() {
-  const wsData = useWebSocket(`${WS_URL}/ws/status`);
-  const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
+//   const wsData = useWebSocket(`${WS_URL}/ws/status`);
+ const { clients } = useWS();
+//   const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
   const [filter, setFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<keyof PCStatus>("pc");
 
-  useEffect(() => {
-    if (wsData?.pc) {
-      setClients((prev) => ({ ...prev, [wsData.pc]: wsData }));
-    }
-  }, [wsData]);
+//   useEffect(() => {
+//     if (wsData?.pc) {
+//       setClients((prev) => ({ ...prev, [wsData.pc]: wsData }));
+//     }
+//   }, [wsData]);
 
   const connectedClients = Object.values(clients);
 
@@ -92,30 +94,17 @@ export default function SystemStatus() {
 
   // Sort clients
   const sortedClients = [...filteredClients].sort((a, b) => {
-    // numeric sorts
-    if (sortBy === "cpu") return (b.cpu ?? 0) - (a.cpu ?? 0);
-    if (sortBy === "ram") return (b.ram ?? 0) - (a.ram ?? 0);
-    if (sortBy === "disk") return (b.disk ?? 0) - (a.disk ?? 0);
+    if (sortBy === "cpu" || sortBy === "ram" || sortBy === "disk")
+      return (b[sortBy] ?? 0) - (a[sortBy] ?? 0);
 
-    // string sorts
-    const aValue = a[sortBy];
-    const bValue = b[sortBy];
-
-    // if value is array or object, convert to JSON string
-    const aStr =
-      aValue && typeof aValue === "object"
-        ? JSON.stringify(aValue)
-        : (aValue ?? "").toString();
-    const bStr =
-      bValue && typeof bValue === "object"
-        ? JSON.stringify(bValue)
-        : (bValue ?? "").toString();
-
+    const aStr = (a[sortBy] ?? "").toString();
+    const bStr = (b[sortBy] ?? "").toString();
     return aStr.localeCompare(bStr);
   });
 
   // Calculate dashboard stats
   const totalClients = connectedClients.length;
+  
   const avgCPU =
     connectedClients.reduce((sum, client) => sum + client.cpu, 0) /
       totalClients || 0;
@@ -133,7 +122,7 @@ export default function SystemStatus() {
         <div className="flex flex-col lg:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="w-full">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              System Monitor
+              System Monitoring
               <span className="ml-4 text-sm px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full font-normal">
                 {totalClients} active system{totalClients !== 1 ? "s" : ""}
               </span>

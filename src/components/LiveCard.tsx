@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import MessageModal from "./MessageModal";
 import { useWebRTC } from "../hooks/useWebRTC";
-import SystemPerformance from "./SystemPerformance";
+// import SystemPerformance from "./SystemPerformance";
 import ConfirmDialog from "./ConfirmDialog";
 import StreamControls from "./Controls";
 import {
@@ -84,6 +84,7 @@ export default function LiveCard({
     type: "sleep" | "lock" | "restart" | "shutdown",
     action: () => void
   ) => {
+    console.log("CLIKED")
     setPendingCommand({ type, action });
     setShowConfirmDialog(true);
     setShowCommandsMenu(false);
@@ -367,7 +368,7 @@ export default function LiveCard({
       </div>
 
       {/* Non-fullscreen mode - Performance stats below video */}
-      <SystemPerformance
+      {/* <SystemPerformance
         cpu={cpu}
         ram={ram}
         disk={disk}
@@ -376,7 +377,7 @@ export default function LiveCard({
           download_kbps: network.download_kbps,
         }}
         isFullscreen={isFullscreen}
-      />
+      /> */}
 
       {/* Confirmation Dialog */}
       <ConfirmDialog

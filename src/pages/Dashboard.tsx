@@ -3,7 +3,8 @@ import LiveCard from "../components/LiveCard";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { useEffect, useState } from "react";
 import { WS_URL, API_URL } from "../config";
-import Layout from "../components/Layout";
+import { useWS } from "../context/WebSocketContext";
+// import Layout from "../components/Layout";
 
 interface PCStatus {
   pc: string;
@@ -18,24 +19,31 @@ interface PCStatus {
 }
 
 export default function Dashboard() {
-  const wsData = useWebSocket(`${WS_URL}/ws/status`);
-  const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
+  // const wsData = useWebSocket(`${WS_URL}/ws/status`);
+  // const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
+  const { clients } = useWS();
   const [visiblePCs, setVisiblePCs] = useState<string[]>([]);
   const [autoConnectVideo, setAutoConnectVideo] = useState(true);
 
-  useEffect(() => {
-    if (wsData?.pc) {
-      setClients((prev) => ({
-        ...prev,
-        [wsData.pc]: wsData,
-      }));
+  // useEffect(() => {
+  //   if (wsData?.pc) {
+  //     setClients((prev) => ({
+  //       ...prev,
+  //       [wsData.pc]: wsData,
+  //     }));
 
-      // Add to visible PCs if not already there
-      if (!visiblePCs.includes(wsData.pc)) {
-        setVisiblePCs((prev) => [...prev, wsData.pc]);
-      }
-    }
-  }, [wsData]);
+  //     // Add to visible PCs if not already there
+  //     if (!visiblePCs.includes(wsData.pc)) {
+  //       setVisiblePCs((prev) => [...prev, wsData.pc]);
+  //     }
+  //   }
+  // }, [wsData]);
+  // Add newly connected PCs to visible list automatically
+  useEffect(() => {
+    Object.keys(clients).forEach((pc) => {
+      if (!visiblePCs.includes(pc)) setVisiblePCs((prev) => [...prev, pc]);
+    });
+  }, [clients, visiblePCs]);
 
   // Function to show/hide a PC's video
   // const togglePCVisibility = useCallback((pc: string) => {
@@ -49,10 +57,10 @@ export default function Dashboard() {
     visiblePCs.includes(pc.pc)
   );
 
-  console.log(displayClients);
-  useEffect(() => {
-    localStorage.setItem("total-pc", displayClients.length.toString());
-  }, [displayClients.length]);
+  // console.log(displayClients);
+  // useEffect(() => {
+  //   localStorage.setItem("total-pc", displayClients.length.toString());
+  // }, [displayClients.length]);
 
   return (
     <div>

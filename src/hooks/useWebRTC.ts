@@ -166,7 +166,12 @@ export function useWebRTC(pcName: string, autoConnect: boolean = true) {
 
   const initWebRTC = useCallback(() => {
     if (!showVideo) return;
-    if (isInitializedRef.current && connectionStatus === "connecting") return;
+    // if (isInitializedRef.current && connectionStatus === "connecting") return;
+    if (pcRef.current || wsRef.current) {
+      console.warn(`${pcName}: WebRTC already initialized, skipping`);
+      return;
+    }
+
 
     try {
       console.log(`${pcName}: Initializing WebRTC...`);

@@ -5,10 +5,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import SystemStatus from "./pages/SystemStatus";
+import { WebSocketProvider } from "./context/WebSocketContext";
 
 function App() {
   return (
-    <Router>
+    <WebSocketProvider>
+      <Router>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
@@ -16,6 +18,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </WebSocketProvider>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import {
   MdMenu,
@@ -22,6 +22,9 @@ export default function Layout() {
   // const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const totalPC = useTotalPC();
+  const location = useLocation(); // <-- get current path
+  // Check if we are on the dashboard page
+  const isDashboard = location.pathname === "/";
 
   return (
     <div className="flex h-screen bg-gray-900">
@@ -245,29 +248,32 @@ export default function Layout() {
         </nav>
 
         {/* Stats Bar */}
-        <div className="bg-gray-800/50 border-b border-gray-700 px-6 py-3">
-          <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-gray-300">Online Systems:</span>
-              <span className="text-white font-semibold">{totalPC}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span className="text-gray-300">Streaming:</span>
-              <span className="text-white font-semibold">{totalPC}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              <span className="text-gray-300">Offline:</span>
-              <span className="text-white font-semibold">0</span>
-            </div>
-            {/* <div className="ml-auto flex items-center gap-2">
+        {/* Stats Bar: only show on dashboard */}
+        {isDashboard && (
+          <div className="bg-gray-800/50 border-b border-gray-700 px-6 py-3">
+            <div className="flex items-center gap-6 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-gray-300">Online Systems:</span>
+                <span className="text-white font-semibold">{totalPC}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-gray-300">Streaming:</span>
+                <span className="text-white font-semibold">{totalPC}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <span className="text-gray-300">Offline:</span>
+                <span className="text-white font-semibold">0</span>
+              </div>
+              {/* <div className="ml-auto flex items-center gap-2">
               <span className="text-gray-300">Last Updated:</span>
               <span className="text-white font-semibold">Just now</span>
             </div> */}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto bg-gray-900">

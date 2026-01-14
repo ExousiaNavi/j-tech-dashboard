@@ -149,26 +149,34 @@ export default function StreamControls({
         </button>
 
         {showCommandsMenu && (
-          <>
+          <div className="w-full">
             {/* Overlay to capture clicks outside */}
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-20"
               onClick={() => setShowCommandsMenu(false)}
             />
 
             {/* Commands menu - Positioned absolutely relative to viewport */}
-            <div className="fixed right-14 top-0 transform w-56 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-2xl z-50 py-2">
-              <div className="px-3 py-2 border-b border-gray-700">
-                <p className="text-xs font-medium text-gray-300">
-                  Computer Commands
-                </p>
-                <p className="text-xs text-gray-400">Send commands to {pc}</p>
+            <div className="fixed right-0 -top-16 w-[400px] bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-2xl z-50 py-2">
+              <div className="px-3 py-2 border-b border-gray-700 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium text-gray-300">
+                    Computer Commands
+                  </p>
+                  <p className="text-xs text-gray-400">Send commands to {pc}</p>
+                </div>
+                <div
+                  onClick={() => setShowCommandsMenu(false)}
+                  className="text-red-600 border px-2 rounded-md border-gray-600 cursor-pointer hover:bg-gray-800/50"
+                >
+                  X
+                </div>
               </div>
 
-              <div className="space-y-1 px-2 py-2">
+              <div className="space-y-1 px-2 py-2 grid grid-cols-2 gap-1">
                 <button
                   onClick={() => confirmCommand("lock", sendLockCommand)}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/50 rounded-lg transition"
+                  className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
                 >
                   <div className="w-8 h-8 rounded-lg bg-yellow-900/30 flex items-center justify-center">
                     <svg
@@ -193,7 +201,7 @@ export default function StreamControls({
 
                 <button
                   onClick={() => confirmCommand("sleep", sendSleepCommand)}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/50 rounded-lg transition"
+                  className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
                 >
                   <div className="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center">
                     <svg
@@ -218,7 +226,7 @@ export default function StreamControls({
 
                 <button
                   onClick={() => confirmCommand("restart", sendRestartCommand)}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/50 rounded-lg transition"
+                  className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
                 >
                   <div className="w-8 h-8 rounded-lg bg-purple-900/30 flex items-center justify-center">
                     <svg
@@ -247,7 +255,7 @@ export default function StreamControls({
                   onClick={() =>
                     confirmCommand("shutdown", sendShutdownCommand)
                   }
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/50 rounded-lg transition"
+                  className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
                 >
                   <div className="w-8 h-8 rounded-lg bg-red-900/30 flex items-center justify-center">
                     <svg
@@ -274,7 +282,7 @@ export default function StreamControls({
 
                 <button
                   onClick={() => setMsgOpen(true)}
-                  className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/50 rounded-lg transition"
+                  className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
                 >
                   <div className="w-8 h-8 rounded-lg bg-pink-900/30 flex items-center justify-center">
                     <svg
@@ -298,7 +306,7 @@ export default function StreamControls({
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
