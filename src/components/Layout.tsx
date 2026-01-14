@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { NavLink, Outlet } from "react-router-dom";
+
 import {
   MdMenu,
   MdDashboard,
@@ -11,12 +13,12 @@ import {
   // MdFullscreen,
   // MdFullscreenExit,
 } from "react-icons/md";
-import { GoBell } from "react-icons/go";
+// import { GoBell } from "react-icons/go";
 import { IoIosSearch } from "react-icons/io";
 import { useTotalPC } from "../hooks/useTotalPC";
 // import logo from "../assets/logo.png";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout() {
   // const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const totalPC = useTotalPC();
@@ -36,7 +38,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={`
           fixed md:static top-0 left-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-950 border-r border-gray-800 text-white flex flex-col z-40
           transform transition-transform duration-300
-          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-64 md:translate-x-0"}
+          ${
+            mobileMenuOpen
+              ? "translate-x-0"
+              : "-translate-x-64 md:translate-x-0"
+          }
         `}
       >
         <div className="p-6 border-b border-gray-800">
@@ -54,41 +60,101 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg">
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                  }`
+                }
+              >
                 <MdDashboard className="text-lg" />
                 <span className="text-sm font-medium">Live Dashboard</span>
-              </button>
+              </NavLink>
             </li>
+
             <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap text-gray-300 hover:bg-gray-800/50 hover:text-white">
+              <NavLink
+                to="/system-status"
+                className={({ isActive }) =>
+                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                  }`
+                }
+              >
                 <MdShowChart className="text-lg" />
-                <span className="text-sm font-medium">Performance Metrics</span>
-              </button>
+                <span className="text-sm font-medium">System Performance</span>
+              </NavLink>
             </li>
+
             <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap text-gray-300 hover:bg-gray-800/50 hover:text-white">
+              <NavLink
+                to="/alerts"
+                className={({ isActive }) =>
+                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                  }`
+                }
+              >
                 <MdNotifications className="text-lg" />
                 <span className="text-sm font-medium">System Alerts</span>
                 <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              </NavLink>
             </li>
+
             <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap text-gray-300 hover:bg-gray-800/50 hover:text-white">
+              <NavLink
+                to="/analytics"
+                className={({ isActive }) =>
+                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                  }`
+                }
+              >
                 <MdBarChart className="text-lg" />
                 <span className="text-sm font-medium">Analytics</span>
-              </button>
+              </NavLink>
             </li>
+
             <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap text-gray-300 hover:bg-gray-800/50 hover:text-white">
+              <NavLink
+                to="/network-status"
+                className={({ isActive }) =>
+                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                  }`
+                }
+              >
                 <MdDns className="text-lg" />
                 <span className="text-sm font-medium">Network Status</span>
-              </button>
+              </NavLink>
             </li>
+
             <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap text-gray-300 hover:bg-gray-800/50 hover:text-white">
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                  }`
+                }
+              >
                 <MdSettings className="text-lg" />
                 <span className="text-sm font-medium">Settings</span>
-              </button>
+              </NavLink>
             </li>
           </ul>
         </nav>
@@ -108,7 +174,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">Live Connections</span>
-              <span className="text-xs font-bold text-green-400">{totalPC} Active</span>
+              <span className="text-xs font-bold text-green-400">
+                {totalPC} Active
+              </span>
             </div>
           </div>
         </div>
@@ -140,14 +208,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            
             {/* <div className="relative">
               <button className="relative p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
                 <GoBell className="text-xl" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               </button>
             </div> */}
-            
+
             <div className="relative">
               <button className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
                 <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
@@ -159,8 +226,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </p>
                   {/* <p className="text-xs text-gray-400">System Administrator</p> */}
                 </div>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
             </div>
@@ -196,13 +273,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto bg-gray-900">
           <div className="p-2 max-w-[1800px] mx-auto">
             {/* Dashboard Header */}
-            
+
             {/* Grid Container */}
             <div className="">
-              {children}
+              <Outlet />
             </div>
-            
-  
           </div>
         </main>
       </div>

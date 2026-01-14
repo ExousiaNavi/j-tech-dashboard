@@ -3,7 +3,7 @@ import LiveCard from "../components/LiveCard";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { useEffect, useState } from "react";
 import { WS_URL, API_URL } from "../config";
-import Layout from "./Layout";
+import Layout from "../components/Layout";
 
 interface PCStatus {
   pc: string;
@@ -55,7 +55,7 @@ export default function Dashboard() {
   }, [displayClients.length]);
 
   return (
-    <Layout>
+    <div>
       {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold text-slate-900">
@@ -113,6 +113,6 @@ export default function Dashboard() {
           </p>
         </div>
       )}
-    </Layout>
+    </div>
   );
 }
