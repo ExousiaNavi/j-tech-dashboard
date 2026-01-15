@@ -1,6 +1,6 @@
 // helpers/liveCardHelpers.ts
 
-export type CommandType = "sleep" | "lock" | "restart" | "shutdown";
+export type CommandType = "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
 
 /* =========================
    API HELPERS

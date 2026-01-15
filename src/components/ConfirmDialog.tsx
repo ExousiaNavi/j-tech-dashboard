@@ -1,5 +1,5 @@
 type PendingCommand = {
-  type: "sleep" | "lock" | "restart" | "shutdown";
+  type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
   action: () => void;
 };
 
@@ -20,8 +20,7 @@ export default function ConfirmDialog({
   setPendingCommand,
   pc,
 }: Props) {
-
-    // return if null
+  // return if null
   if (!showConfirmDialog || !pendingCommand) return null;
 
   return (
@@ -36,7 +35,9 @@ export default function ConfirmDialog({
                 ? "bg-yellow-900/30"
                 : pendingCommand.type === "restart"
                 ? "bg-purple-900/30"
-                : "bg-red-900/30"
+                : pendingCommand.type === "shutdown"
+                ? "bg-red-900/30"
+                : "bg-indigo-900/30" // restart_agent color
             }`}
           >
             {pendingCommand.type === "sleep" ? (
@@ -81,6 +82,20 @@ export default function ConfirmDialog({
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
+            ) : pendingCommand.type === "shutdown" ? (
+              <svg
+                className="w-6 h-6 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
             ) : (
               <svg
                 className="w-6 h-6 text-red-400"
@@ -105,8 +120,11 @@ export default function ConfirmDialog({
                 ? "Lock Computer"
                 : pendingCommand.type === "restart"
                 ? "Restart Computer"
-                : "Shutdown Computer"}
+                : pendingCommand.type === "shutdown"
+                ? "Shutdown Computer"
+                : "Restart Agent"}
             </h3>
+
             <p className="text-sm text-gray-400">Confirm action</p>
           </div>
         </div>
@@ -120,7 +138,9 @@ export default function ConfirmDialog({
               ? "lock"
               : pendingCommand.type === "restart"
               ? "restart"
-              : "shutdown"}
+              : pendingCommand.type === "shutdown"
+              ? "shutdown"
+              : "restart"}
           </span>
           <span className="font-bold text-white">{pc}</span>?
         </p>
@@ -148,7 +168,9 @@ export default function ConfirmDialog({
                 ? "bg-yellow-600 hover:bg-yellow-700"
                 : pendingCommand.type === "restart"
                 ? "bg-purple-600 hover:bg-purple-700"
-                : "bg-red-600 hover:bg-red-700"
+                : pendingCommand.type === "shutdown"
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-indigo-600 hover:bg-indigo-700"
             }`}
           >
             Yes,{" "}
@@ -158,7 +180,9 @@ export default function ConfirmDialog({
               ? "Lock"
               : pendingCommand.type === "restart"
               ? "Restart"
-              : "Shutdown"}
+              : pendingCommand.type === "shutdown"
+              ? "Shutdown"
+              : "Restart Agent"}
           </button>
         </div>
       </div>

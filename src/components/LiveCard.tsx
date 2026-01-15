@@ -43,7 +43,7 @@ export default function LiveCard({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showCommandsMenu, setShowCommandsMenu] = useState(false);
   const [pendingCommand, setPendingCommand] = useState<{
-    type: "sleep" | "lock" | "restart" | "shutdown";
+    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
     action: () => void;
   } | null>(null);
   const [showControls, setShowControls] = useState(true);
@@ -79,9 +79,10 @@ export default function LiveCard({
   const sendLockCommand = () => sendCommand(api, pc, "lock");
   const sendRestartCommand = () => sendCommand(api, pc, "restart");
   const sendShutdownCommand = () => sendCommand(api, pc, "shutdown");
+  const sendRestartAgentCommand = () => sendCommand(api, pc, "restart_agent");
 
   const confirmCommand = (
-    type: "sleep" | "lock" | "restart" | "shutdown",
+    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent",
     action: () => void
   ) => {
     console.log("CLIKED")
@@ -261,6 +262,7 @@ export default function LiveCard({
           sendSleepCommand={sendSleepCommand}
           sendRestartCommand={sendRestartCommand}
           sendShutdownCommand={sendShutdownCommand}
+          sendRestartAgentCommand={sendRestartAgentCommand}
           commandsMenuRef={commandsMenuRef}
           pc={pc}
         />

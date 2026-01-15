@@ -67,17 +67,17 @@ interface PCStatus {
 }
 
 export default function SystemStatus() {
-//   const wsData = useWebSocket(`${WS_URL}/ws/status`);
- const { clients } = useWS();
-//   const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
+  //   const wsData = useWebSocket(`${WS_URL}/ws/status`);
+  const { clients } = useWS();
+  //   const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
   const [filter, setFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<keyof PCStatus>("pc");
 
-//   useEffect(() => {
-//     if (wsData?.pc) {
-//       setClients((prev) => ({ ...prev, [wsData.pc]: wsData }));
-//     }
-//   }, [wsData]);
+  //   useEffect(() => {
+  //     if (wsData?.pc) {
+  //       setClients((prev) => ({ ...prev, [wsData.pc]: wsData }));
+  //     }
+  //   }, [wsData]);
 
   const connectedClients = Object.values(clients);
 
@@ -104,7 +104,7 @@ export default function SystemStatus() {
 
   // Calculate dashboard stats
   const totalClients = connectedClients.length;
-  
+
   const avgCPU =
     connectedClients.reduce((sum, client) => sum + client.cpu, 0) /
       totalClients || 0;
@@ -123,9 +123,9 @@ export default function SystemStatus() {
           <div className="w-full">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               System Monitoring
-              <span className="ml-4 text-sm px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full font-normal">
+              {/* <span className="w-fit ml-4 text-sm px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full font-normal">
                 {totalClients} active system{totalClients !== 1 ? "s" : ""}
-              </span>
+              </span> */}
             </h1>
             <p className="text-gray-400">
               Real-time monitoring and management of connected systems
@@ -283,43 +283,45 @@ export default function SystemStatus() {
 
         {/* Controls */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-gray-400">Filter by:</span>
-            <button
-              onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === "all"
-                  ? "bg-indigo-500 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              All Systems
-            </button>
-            <button
-              onClick={() => setFilter("high-load")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === "high-load"
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              High Load
-            </button>
-            <button
-              onClick={() => setFilter("alerts")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                filter === "alerts"
-                  ? "bg-yellow-500 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              With Alerts
-            </button>
-            <div className="relative">
+          <div className="w-full flex flex-col md:flex-row items-center gap-2">
+            <span className="text-sm text-gray-400 shrink-0">Filter by:</span>
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={() => setFilter("all")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filter === "all"
+                    ? "bg-indigo-500 text-white"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                All Systems
+              </button>
+              <button
+                onClick={() => setFilter("high-load")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filter === "high-load"
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                High Load
+              </button>
+              <button
+                onClick={() => setFilter("alerts")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filter === "alerts"
+                    ? "bg-yellow-500 text-white"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                With Alerts
+              </button>
+            </div>
+            <div className="relative w-full">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as keyof PCStatus)}
-                className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none pr-8"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none pr-8"
               >
                 <option value="pc">Sort by: Name</option>
                 <option value="cpu">Sort by: CPU Usage</option>
@@ -395,7 +397,7 @@ export default function SystemStatus() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {sortedClients.map((pc) => (
             <SystemStatusCard
               key={pc.pc}

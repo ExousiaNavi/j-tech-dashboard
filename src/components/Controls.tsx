@@ -1,4 +1,4 @@
-type CommandType = "sleep" | "lock" | "restart" | "shutdown";
+type CommandType = "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
 
 interface ControlsProps {
   /* UI state */
@@ -22,7 +22,7 @@ interface ControlsProps {
   sendSleepCommand: () => void;
   sendRestartCommand: () => void;
   sendShutdownCommand: () => void;
-
+  sendRestartAgentCommand: () => void;
   /* Refs */
   commandsMenuRef: React.RefObject<HTMLDivElement | null>;
 
@@ -44,6 +44,7 @@ export default function StreamControls({
   sendSleepCommand,
   sendRestartCommand,
   sendShutdownCommand,
+  sendRestartAgentCommand,
   commandsMenuRef,
   pc,
 }: ControlsProps) {
@@ -247,6 +248,33 @@ export default function StreamControls({
                     <p className="font-medium">Restart</p>
                     <p className="text-xs text-gray-400">
                       Restart the computer
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => confirmCommand("restart_agent", sendRestartAgentCommand)}
+                  className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-purple-900/30 flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-purple-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="font-medium">Restart Agent</p>
+                    <p className="text-xs text-gray-400">
+                      Restart the agent
                     </p>
                   </div>
                 </button>

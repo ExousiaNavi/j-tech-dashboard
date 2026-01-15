@@ -85,7 +85,7 @@ export default function SystemStatusCard({
   const [msgOpen, setMsgOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingCommand, setPendingCommand] = useState<{
-    type: "sleep" | "lock" | "restart" | "shutdown";
+    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
     action: () => void;
   } | null>(null);
   const [showAlerts, setShowAlerts] = useState(true);
@@ -93,17 +93,18 @@ export default function SystemStatusCard({
 
   useEffect(() => {
     // Check for critical alerts
-    const critical = alerts.some(alert => 
-      alert.toLowerCase().includes('critical') || 
-      alert.toLowerCase().includes('low disk') ||
-      ram >= 90 ||
-      cpu >= 90
+    const critical = alerts.some(
+      (alert) =>
+        alert.toLowerCase().includes("critical") ||
+        alert.toLowerCase().includes("low disk") ||
+        ram >= 90 ||
+        cpu >= 90
     );
     setHasCriticalAlert(critical);
   }, [alerts, cpu, ram]);
 
   const confirmCommand = (
-    type: "sleep" | "lock" | "restart" | "shutdown",
+    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent",
     action: () => void
   ) => {
     setPendingCommand({ type, action });
@@ -115,6 +116,7 @@ export default function SystemStatusCard({
   const sendLockCommand = () => sendCommand(api, pc, "lock");
   const sendRestartCommand = () => sendCommand(api, pc, "restart");
   const sendShutdownCommand = () => sendCommand(api, pc, "shutdown");
+  const sendRestartAgentCommand = () => sendCommand(api, pc, "restart_agent");
 
   // Messages
   const handleSendMessage = (message: string) => sendMessage(api, pc, message);
@@ -125,21 +127,43 @@ export default function SystemStatusCard({
     <div className="bg-gray-900 rounded-xl shadow-2xl border border-gray-800 w-full overflow-hidden">
       {/* ALERT BANNER - Immediately visible */}
       {alerts.length > 0 && showAlerts && (
-        <div 
-          className={`${hasCriticalAlert ? 'bg-gradient-to-r from-red-900/40 to-red-800/20 border-b border-red-500/30' : 'bg-gradient-to-r from-yellow-900/40 to-yellow-800/20 border-b border-yellow-500/30'}`}
+        <div
+          className={`${
+            hasCriticalAlert
+              ? "bg-gradient-to-r from-red-900/40 to-red-800/20 border-b border-red-500/30"
+              : "bg-gradient-to-r from-yellow-900/40 to-yellow-800/20 border-b border-yellow-500/30"
+          }`}
         >
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full ${hasCriticalAlert ? 'bg-red-500/20' : 'bg-yellow-500/20'} flex items-center justify-center`}>
-                  <svg className={`w-4 h-4 ${hasCriticalAlert ? 'text-red-400' : 'text-yellow-400'}`} fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <div
+                  className={`w-8 h-8 rounded-full ${
+                    hasCriticalAlert ? "bg-red-500/20" : "bg-yellow-500/20"
+                  } flex items-center justify-center`}
+                >
+                  <svg
+                    className={`w-4 h-4 ${
+                      hasCriticalAlert ? "text-red-400" : "text-yellow-400"
+                    }`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className={`font-bold ${hasCriticalAlert ? 'text-red-300' : 'text-yellow-300'}`}>
-                      {alerts.length} ALERT{alerts.length > 1 ? 'S' : ''}
+                    <span
+                      className={`font-bold ${
+                        hasCriticalAlert ? "text-red-300" : "text-yellow-300"
+                      }`}
+                    >
+                      {alerts.length} ALERT{alerts.length > 1 ? "S" : ""}
                     </span>
                     {hasCriticalAlert && (
                       <span className="px-2 py-0.5 bg-red-500/30 text-red-300 text-xs rounded-full animate-pulse">
@@ -148,7 +172,8 @@ export default function SystemStatusCard({
                     )}
                   </div>
                   <p className="text-sm text-gray-300 mt-1">
-                    {alerts[0]} {alerts.length > 1 && `+${alerts.length - 1} more`}
+                    {alerts[0]}{" "}
+                    {alerts.length > 1 && `+${alerts.length - 1} more`}
                   </p>
                 </div>
               </div>
@@ -156,8 +181,18 @@ export default function SystemStatusCard({
                 onClick={() => setShowAlerts(false)}
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -168,9 +203,9 @@ export default function SystemStatusCard({
       {/* PC Header */}
       <div className="p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start">
-          <div>
+          <div className="w-full">
             <div className="flex items-center space-x-3 mb-2">
-              <h1 className="text-white font-bold text-xl">{pc}</h1>
+              <h1 className="text-white font-bold text-xl shrink-0">{pc}</h1>
               {(ram >= 90 || cpu >= 90 || alerts.length > 0) && (
                 <span className="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded-full border border-red-500/30">
                   CRITICAL
@@ -178,13 +213,14 @@ export default function SystemStatusCard({
               )}
             </div>
             <div className="text-gray-400 text-sm">
-              {user} — {os} {os_version}
+              User: {user} 
+              <span className="block">OS: {os} {os_version}</span>
             </div>
-            <div className="text-gray-400 text-sm">{ip}</div>
+            <div className="text-gray-400 text-sm">IP Address: {ip}</div>
           </div>
-          <div className="flex gap-2">
-            <div className="flex items-center space-x-2">
-            {!showAlerts && alerts.length > 0 && (
+          <div className="flex gap-2 mt-2 w-full justify-end">
+            {/* <div className="flex items-center space-x-2">
+              {!showAlerts && alerts.length > 0 && (
               <button
                 onClick={() => setShowAlerts(true)}
                 className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm rounded-lg transition-colors flex items-center space-x-2"
@@ -195,48 +231,200 @@ export default function SystemStatusCard({
                 <span>Show {alerts.length} alert{alerts.length > 1 ? 's' : ''}</span>
               </button>
             )}
-          </div>
-            <button
-              onClick={() => setMsgOpen(true)}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium text-white transition-colors flex items-center space-x-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              <span>Message</span>
-            </button>
-            <div className="relative group">
-              <button className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium text-white transition-colors flex items-center space-x-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </div> */}
+            <div className="flex flex-row md:flex-col  gap-2">
+              <button
+                onClick={() => setShowAlerts(true)}
+                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <span>Actions</span>
+                <span>Show alert</span>
               </button>
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                <button
-                  onClick={() => confirmCommand("sleep", sendSleepCommand)}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg transition-colors"
-                >
-                  Put to Sleep
+
+              <div className="relative group">
+                <button className="w-full px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium text-white transition-colors flex items-center space-x-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                  <span>Actions</span>
                 </button>
-                <button
-                  onClick={() => confirmCommand("lock", sendLockCommand)}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg transition-colors"
-                >
-                  Lock Workstation
-                </button>
-                <button
-                  onClick={() => confirmCommand("restart", sendRestartCommand)}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg transition-colors"
-                >
-                  Restart System
-                </button>
-                <button
-                  onClick={() => confirmCommand("shutdown", sendShutdownCommand)}
-                  className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 first:rounded-t-lg last:rounded-b-lg transition-colors"
-                >
-                  Shutdown
-                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                  <button
+                    onClick={() => confirmCommand("lock", sendLockCommand)}
+                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-yellow-900/30 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-yellow-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">Lock Computer</p>
+                      <p className="text-xs text-gray-400">
+                        Lock the PC screen
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => confirmCommand("sleep", sendSleepCommand)}
+                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-blue-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">Sleep Mode</p>
+                      <p className="text-xs text-gray-400">Put PC to sleep</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      confirmCommand("restart", sendRestartCommand)
+                    }
+                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-purple-900/30 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-purple-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">Restart</p>
+                      <p className="text-xs text-gray-400">
+                        Restart the computer
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      confirmCommand("restart_agent", sendRestartAgentCommand)
+                    }
+                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-purple-900/30 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-purple-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">Restart</p>
+                      <p className="text-xs text-gray-400">Restart the agent</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      confirmCommand("shutdown", sendShutdownCommand)
+                    }
+                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-red-900/30 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">Shutdown</p>
+                      <p className="text-xs text-gray-400">
+                        Turn off the computer
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setMsgOpen(true)}
+                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-pink-900/30 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-pink-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">Send Message</p>
+                      <p className="text-xs text-gray-400">
+                        Send popup message
+                      </p>
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -277,7 +465,7 @@ export default function SystemStatusCard({
         </div>
 
         {/* Stats Grid - Your exact design */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* CPU */}
           <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 border border-gray-800 hover:border-indigo-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10">
             <div className="flex items-start justify-between mb-4">
@@ -288,7 +476,9 @@ export default function SystemStatusCard({
                     CPU
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-white">{cpu.toFixed(1)}%</div>
+                <div className="text-2xl font-bold text-white">
+                  {cpu.toFixed(1)}%
+                </div>
               </div>
               <div className="w-10 h-10 rounded-lg bg-red-900/20 flex items-center justify-center">
                 <svg
@@ -317,7 +507,7 @@ export default function SystemStatusCard({
               </div>
             </div>
             <div className="text-xs text-gray-500">
-              Top process: {top_processes[1]?.name || 'Idle'}
+              Top process: {top_processes[1]?.name || "Idle"}
             </div>
           </div>
 
@@ -331,7 +521,9 @@ export default function SystemStatusCard({
                     Memory
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-white">{ram.toFixed(1)}%</div>
+                <div className="text-2xl font-bold text-white">
+                  {ram.toFixed(1)}%
+                </div>
               </div>
               <div className="w-10 h-10 rounded-lg bg-blue-900/20 flex items-center justify-center">
                 <svg
@@ -358,7 +550,7 @@ export default function SystemStatusCard({
               </div>
             </div>
             <div className="text-xs text-gray-500">
-              {ram >= 80 ? 'High usage' : 'Normal operation'}
+              {ram >= 80 ? "High usage" : "Normal operation"}
             </div>
           </div>
 
@@ -401,7 +593,7 @@ export default function SystemStatusCard({
               </div>
             </div>
             <div className="text-xs text-gray-500">
-              {disks.length} drive{disks.length !== 1 ? 's' : ''} available
+              {disks.length} drive{disks.length !== 1 ? "s" : ""} available
             </div>
           </div>
 
@@ -494,50 +686,91 @@ export default function SystemStatusCard({
 
         {/* System Information */}
         <div className="mt-6 pt-6 border-t border-gray-800/50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Uptime Information */}
             <div className="flex flex-col gap-2 lg:flex-row items-start">
               <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 text-blue-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="">
-                <div className="text-xs font-semibold text-gray-400 mb-1">Uptime</div>
-                <div className="text-sm text-gray-300">{uptime.uptime_hours.toFixed(1)} hours</div>
+                <div className="text-xs font-semibold text-gray-400 mb-1">
+                  Uptime
+                </div>
+                <div className="text-sm text-gray-300">
+                  {uptime.uptime_hours.toFixed(1)} hours
+                </div>
                 <div className="text-xs text-gray-500 mt-1">
                   Boot: {new Date(uptime.boot_time).toLocaleDateString()}
                 </div>
               </div>
             </div>
-            
+
             {/* Network Interfaces */}
             <div className="flex flex-col gap-2 lg:flex-row items-start">
               <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                <svg
+                  className="w-4 h-4 text-purple-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
+                  />
                 </svg>
               </div>
               <div>
-                <div className="text-xs font-semibold text-gray-400 mb-1">Network</div>
+                <div className="text-xs font-semibold text-gray-400 mb-1">
+                  Network
+                </div>
                 <div className="text-sm text-gray-300">
-                  {Object.values(network_interfaces).filter(ni => ni.up).length} active interfaces
+                  {
+                    Object.values(network_interfaces).filter((ni) => ni.up)
+                      .length
+                  }{" "}
+                  active interfaces
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {Object.values(network_interfaces).find(ni => ni.up && ni.speed > 0)?.speed || 0} Mbps max
+                  {Object.values(network_interfaces).find(
+                    (ni) => ni.up && ni.speed > 0
+                  )?.speed || 0}{" "}
+                  Mbps max
                 </div>
               </div>
             </div>
-            
+
             {/* GPU Information */}
             <div className="flex flex-col gap-2 lg:flex-row items-start">
               <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 text-orange-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div>
-                <div className="text-xs font-semibold text-gray-400 mb-1">GPU</div>
+                <div className="text-xs font-semibold text-gray-400 mb-1">
+                  GPU
+                </div>
                 <div className="text-sm text-gray-300">
                   {gpu.length > 0 ? (
                     <>
@@ -561,37 +794,58 @@ export default function SystemStatusCard({
             {/* Disk Details */}
             <div>
               <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 mr-2 text-gray-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0h8v12H6V4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Disk Information
               </h4>
               <div className="space-y-2">
                 {disks.map((d) => (
-                  <div key={d.device} className="text-sm p-2 rounded-lg bg-gray-800/30">
+                  <div
+                    key={d.device}
+                    className="text-sm p-2 rounded-lg bg-gray-800/30"
+                  >
                     <div className="flex justify-between items-center mb-1">
-                      <div className="text-gray-300 font-medium">{d.device}</div>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        d.usage_percent >= 90 ? 'bg-red-500/20 text-red-300' :
-                        d.usage_percent >= 80 ? 'bg-yellow-500/20 text-yellow-300' :
-                        'bg-green-500/20 text-green-300'
-                      }`}>
+                      <div className="text-gray-300 font-medium">
+                        {d.device}
+                      </div>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          d.usage_percent >= 90
+                            ? "bg-red-500/20 text-red-300"
+                            : d.usage_percent >= 80
+                            ? "bg-yellow-500/20 text-yellow-300"
+                            : "bg-green-500/20 text-green-300"
+                        }`}
+                      >
                         {d.usage_percent}%
                       </span>
                     </div>
                     <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-1">
                       <div
                         className={`h-full rounded-full ${
-                          d.usage_percent >= 90 ? 'bg-gradient-to-r from-red-600 to-red-400' :
-                          d.usage_percent >= 80 ? 'bg-gradient-to-r from-yellow-600 to-yellow-400' :
-                          'bg-gradient-to-r from-green-600 to-green-400'
+                          d.usage_percent >= 90
+                            ? "bg-gradient-to-r from-red-600 to-red-400"
+                            : d.usage_percent >= 80
+                            ? "bg-gradient-to-r from-yellow-600 to-yellow-400"
+                            : "bg-gradient-to-r from-green-600 to-green-400"
                         }`}
                         style={{ width: `${d.usage_percent}%` }}
                       />
                     </div>
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>{d.used_gb.toFixed(1)} GB used</span>
-                      <span>{d.free_gb.toFixed(1)} GB free of {d.total_gb} GB</span>
+                      <span>
+                        {d.free_gb.toFixed(1)} GB free of {d.total_gb} GB
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -601,21 +855,38 @@ export default function SystemStatusCard({
             {/* Top Processes */}
             <div>
               <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4 mr-2 text-gray-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Top Processes
               </h4>
               <div className="space-y-2">
                 {top_processes.slice(1, 4).map((process) => (
-                  <div key={process.pid} className="flex justify-between items-center text-sm p-2 rounded-lg bg-gray-800/30">
-                    <span className="text-gray-300 truncate max-w-[50%]">{process.name}</span>
+                  <div
+                    key={process.pid}
+                    className="flex flex-col justify-between items-start text-sm p-2 rounded-lg bg-gray-800/30"
+                  >
+                    <span className="text-gray-300 truncate max-w-[50%]">
+                      {process.name}
+                    </span>
                     <div className="flex space-x-2">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        process.cpu_percent > 30 ? 'bg-red-500/20 text-red-300' :
-                        process.cpu_percent > 10 ? 'bg-yellow-500/20 text-yellow-300' :
-                        'bg-blue-500/20 text-blue-300'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          process.cpu_percent > 30
+                            ? "bg-red-500/20 text-red-300"
+                            : process.cpu_percent > 10
+                            ? "bg-yellow-500/20 text-yellow-300"
+                            : "bg-blue-500/20 text-blue-300"
+                        }`}
+                      >
                         CPU: {process.cpu_percent.toFixed(1)}%
                       </span>
                       <span className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300">
