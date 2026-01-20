@@ -4,6 +4,11 @@ import { useWebSocket } from "../hooks/useWebSocket";
 import { WS_URL, API_URL } from "../config";
 import SystemStatusCard from "../components/SystemStatusCard";
 import { useWS } from "../context/WebSocketContext";
+import { useOutletContext } from "react-router-dom"; // ✅ correct
+
+interface OutletContext {
+  selectedOrg: string | null;
+}
 
 interface NetworkUsage {
   upload_kbps: number;
@@ -80,16 +85,36 @@ export default function SystemStatus() {
   //   }, [wsData]);
 
   const connectedClients = Object.values(clients);
+  console.log(connectedClients);
 
+  const { selectedOrg } = useOutletContext<OutletContext>();
+
+  console.log(selectedOrg);
   // Filter clients based on criteria
+  // const filteredClients = connectedClients.filter((client) => {
+  //   if (filter === "high-load") return client.cpu > 80 || client.ram > 80;
+  //   if (filter === "alerts") return client.alerts.length > 0;
+  //   if (filter === "windows")
+  //     return client.os.toLowerCase().includes("windows");
+  //   if (filter === "linux") return client.os.toLowerCase().includes("linux");
+  //   if (filter === "mac") return client.os.toLowerCase().includes("mac");
+  //   return true;
+  // });
+
+  // Filter clients based on criteria + selectedOrg
   const filteredClients = connectedClients.filter((client) => {
+    // First, filter by selectedOrg if set
+    if (selectedOrg && client.org_id !== selectedOrg) return false;
+
+    // Then filter by user-selected filter
     if (filter === "high-load") return client.cpu > 80 || client.ram > 80;
     if (filter === "alerts") return client.alerts.length > 0;
     if (filter === "windows")
       return client.os.toLowerCase().includes("windows");
     if (filter === "linux") return client.os.toLowerCase().includes("linux");
     if (filter === "mac") return client.os.toLowerCase().includes("mac");
-    return true;
+
+    return true; // default: show all
   });
 
   // Sort clients
@@ -103,16 +128,16 @@ export default function SystemStatus() {
   });
 
   // Calculate dashboard stats
-  const totalClients = connectedClients.length;
+  const totalClients = filteredClients.length;
 
   const avgCPU =
-    connectedClients.reduce((sum, client) => sum + client.cpu, 0) /
+    filteredClients.reduce((sum, client) => sum + client.cpu, 0) /
       totalClients || 0;
   const avgRAM =
-    connectedClients.reduce((sum, client) => sum + client.ram, 0) /
+    filteredClients.reduce((sum, client) => sum + client.ram, 0) /
       totalClients || 0;
-  const systemsWithAlerts = connectedClients.filter(
-    (c) => c.alerts.length > 0
+  const systemsWithAlerts = filteredClients.filter(
+    (c) => c.alerts.length > 0,
   ).length;
 
   return (

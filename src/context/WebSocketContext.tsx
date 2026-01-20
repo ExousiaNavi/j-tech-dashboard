@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { WS_URL } from "../config";
 
 interface PCStatus {
@@ -7,6 +13,7 @@ interface PCStatus {
   cpu: number;
   ram: number;
   disk: number;
+  org_id?: string; // Add org_id
   network: {
     upload_kbps: number;
     download_kbps: number;
@@ -18,7 +25,9 @@ interface WebSocketContextValue {
   clients: { [key: string]: PCStatus };
 }
 
-const WebSocketContext = createContext<WebSocketContextValue | undefined>(undefined);
+const WebSocketContext = createContext<WebSocketContextValue | undefined>(
+  undefined,
+);
 
 export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [clients, setClients] = useState<{ [key: string]: PCStatus }>({});
@@ -31,7 +40,12 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
         const data = JSON.parse(event.data);
         if (!data.pc) return;
 
-        setClients((prev) => ({ ...prev, [data.pc]: data }));
+        // setClients((prev) => ({ ...prev, [data.pc]: data }));
+        setClients((prev) => ({
+          ...prev,
+          [data.pc]: { ...prev[data.pc], ...data }, // merge updates
+        }));
+        
       } catch (err) {
         console.error("Failed to parse WS message", err);
       }
@@ -54,6 +68,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
 export const useWS = () => {
   const context = useContext(WebSocketContext);
-  if (!context) throw new Error("useWS must be used within a WebSocketProvider");
+  if (!context)
+    throw new Error("useWS must be used within a WebSocketProvider");
   return context;
 };

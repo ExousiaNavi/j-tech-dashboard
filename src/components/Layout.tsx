@@ -1,30 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import {
   MdMenu,
   MdDashboard,
-  MdShowChart,
-  MdNotifications,
-  MdBarChart,
-  MdDns,
-  MdSettings,
+  MdRefresh,
   MdInfo,
-  // MdFullscreen,
-  // MdFullscreenExit,
+  MdBusiness,
+  MdMonitor,
 } from "react-icons/md";
-// import { GoBell } from "react-icons/go";
-import { IoIosSearch } from "react-icons/io";
+// import { IoMdRefreshCircle } from "react-icons/io";
 import { useTotalPC } from "../hooks/useTotalPC";
-// import logo from "../assets/logo.png";
+import { useOrg } from "../context/OrgContext";
 
 export default function Layout() {
-  // const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const totalPC = useTotalPC();
-  const location = useLocation(); // <-- get current path
-  // Check if we are on the dashboard page
-  const isDashboard = location.pathname === "/";
+  const { orgs: savedOrgs, refreshOrgs } = useOrg();
+  const location = useLocation();
+
+  // NEW: selected org - default to first org if on system-status page
+  const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
+  const isSystemStatusPage = location.pathname === "/system-status";
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Auto-select first org when savedOrgs changes and we're on system-status page
+  useEffect(() => {
+    if (isSystemStatusPage && !selectedOrg && savedOrgs.length > 0) {
+      setSelectedOrg(savedOrgs[0].id);
+    }
+  }, [savedOrgs, selectedOrg, isSystemStatusPage]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true); // start spinning
+
+    // Ensure a minimum spin duration
+    const minDuration = new Promise((res) => setTimeout(res, 600));
+
+    // Call refreshOrgs (could be sync or async)
+    const refreshResult = refreshOrgs();
+    if (refreshResult instanceof Promise) await refreshResult;
+
+    await minDuration; // wait at least 600ms
+    setIsRefreshing(false); // stop spinning
+  };
 
   return (
     <div className="flex h-screen bg-gray-900">
@@ -41,13 +61,10 @@ export default function Layout() {
         className={`
           fixed md:static top-0 left-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-950 border-r border-gray-800 text-white flex flex-col z-40
           transform transition-transform duration-300
-          ${
-            mobileMenuOpen
-              ? "translate-x-0"
-              : "-translate-x-64 md:translate-x-0"
-          }
+          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-64 md:translate-x-0"}
         `}
       >
+        {/* Header */}
         <div className="p-6 border-b border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center">
@@ -60,8 +77,9 @@ export default function Layout() {
           </div>
         </div>
 
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+        {/* Navigation */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          {/* <ul className="space-y-2">
             <li>
               <NavLink
                 to="/"
@@ -74,94 +92,114 @@ export default function Layout() {
                   }`
                 }
               >
-                <MdDashboard className="text-lg" />
-                <span className="text-sm font-medium">Live Dashboard</span>
+                <MdMonitor className="text-lg" />
+                <span className="text-sm font-medium">Live Monitoring</span>
               </NavLink>
             </li>
+          </ul> */}
+          <div className="px-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <MdDashboard className="text-gray-400" />
+                <h3 className="text-xs font-semibold text-gray-400 uppercase">
+                  Dashboard
+                </h3>
+              </div>
+            </div>
 
-            <li>
-              <NavLink
-                to="/system-status"
-                className={({ isActive }) =>
-                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                  }`
-                }
-              >
-                <MdShowChart className="text-lg" />
-                <span className="text-sm font-medium">System Performance</span>
-              </NavLink>
-            </li>
+            <ul className="space-y-1">
+              <li>
+                <NavLink
+                  to="/"
+                  className={({ isActive }) =>
+                    `w-full flex items-center bg-gray-800/10 justify-between px-3 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                      isActive
+                        ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                        : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                    }`
+                  }
+                  title={`System Monitoring`}
+                >
+                  <div className="flex items-center gap-2">
+                    <MdMonitor className="text-white" />
+                    <span className="text-sm truncate">System Monitoring</span>
+                  </div>
+                  
+                </NavLink>
+              </li>
+            </ul>
+          </div>
 
-            <li>
-              <NavLink
-                to="/alerts"
-                className={({ isActive }) =>
-                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                  }`
-                }
-              >
-                <MdNotifications className="text-lg" />
-                <span className="text-sm font-medium">System Alerts</span>
-                <span className="ml-auto w-2 h-2 bg-red-500 rounded-full"></span>
-              </NavLink>
-            </li>
+          {/* Organization List - Each org links to System Performance */}
+          <div className="mt-6 px-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <MdBusiness className="text-gray-400" />
+                <h3 className="text-xs font-semibold text-gray-400 uppercase">
+                  Organizations
+                </h3>
+              </div>
 
-            <li>
-              <NavLink
-                to="/analytics"
-                className={({ isActive }) =>
-                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                  }`
-                }
+              {/* Refresh Icon Button */}
+              <button
+                onClick={handleRefresh}
+                className="text-gray-400 hover:text-white p-1 rounded transition-colors"
+                title="Refresh Organizations"
               >
-                <MdBarChart className="text-lg" />
-                <span className="text-sm font-medium">Analytics</span>
-              </NavLink>
-            </li>
+                <MdRefresh
+                  className={`text-lg transition-transform duration-500 ${
+                    isRefreshing ? "animate-spin" : ""
+                  }`}
+                />
+              </button>
+            </div>
 
-            <li>
-              <NavLink
-                to="/network-status"
-                className={({ isActive }) =>
-                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                  }`
-                }
-              >
-                <MdDns className="text-lg" />
-                <span className="text-sm font-medium">Network Status</span>
-              </NavLink>
-            </li>
+            {savedOrgs.length === 0 ? (
+              <p className="text-xs text-gray-500">No organizations found</p>
+            ) : (
+              <ul className="space-y-1">
+                {savedOrgs.map((org) => (
+                  <li key={org.id}>
+                    <NavLink
+                      to="/system-status"
+                      state={{ orgId: org.id }}
+                      className={({ isActive }) =>
+                        `w-full flex items-center bg-gray-800/10 justify-between px-3 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                          isActive && selectedOrg === org.id
+                            ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                            : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                        }`
+                      }
+                      title={`${org.agents?.length || 0} agents`}
+                      onClick={() => setSelectedOrg(org.id)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            (org.agents?.length ?? 0) > 0
+                              ? "bg-green-500"
+                              : "bg-red-500"
+                          }`}
+                        />
 
-            <li>
-              <NavLink
-                to="/settings"
-                className={({ isActive }) =>
-                  `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                  }`
-                }
-              >
-                <MdSettings className="text-lg" />
-                <span className="text-sm font-medium">Settings</span>
-              </NavLink>
-            </li>
-          </ul>
+                        <span className="text-sm truncate">{org.name}</span>
+                      </div>
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded ${
+                          selectedOrg === org.id ? "bg-white/20" : "bg-gray-800"
+                        }`}
+                      >
+                        {org.agents?.length || 0}
+                      </span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </nav>
 
+        {/* System Info */}
         <div className="p-4 border-t border-gray-800">
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
             <div className="flex items-center gap-2 mb-3">
@@ -199,25 +237,18 @@ export default function Layout() {
         <nav className="bg-gray-800 border-b border-gray-700 h-16 flex items-center justify-between px-6">
           <div className="flex items-center gap-6">
             <h1 className="text-lg font-semibold text-white">
-              System Monitor Dashboard
+              System Monitoring Dashboard
             </h1>
-            <div className="hidden md:block relative">
-              <input
-                placeholder="Search computers, systems..."
-                className="w-80 pl-10 pr-4 py-2 text-sm bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent placeholder-gray-400"
-                type="text"
-              />
-              <IoIosSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
+            {selectedOrg && isSystemStatusPage && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-gray-700/50 rounded-lg">
+                <MdBusiness className="text-red-400 text-sm" />
+                <span className="text-sm text-gray-200">
+                  {savedOrgs.find((o) => o.id === selectedOrg)?.name}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
-            {/* <div className="relative">
-              <button className="relative p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
-                <GoBell className="text-xl" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
-            </div> */}
-
             <div className="relative">
               <button className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
                 <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
@@ -227,7 +258,6 @@ export default function Layout() {
                   <p className="text-sm font-medium text-white">
                     Admin Dashboard
                   </p>
-                  {/* <p className="text-xs text-gray-400">System Administrator</p> */}
                 </div>
                 <svg
                   className="w-4 h-4 text-gray-400"
@@ -247,43 +277,11 @@ export default function Layout() {
           </div>
         </nav>
 
-        {/* Stats Bar */}
-        {/* Stats Bar: only show on dashboard */}
-        {isDashboard && (
-          <div className="bg-gray-800/50 border-b border-gray-700 px-6 py-3">
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-300">Online Systems:</span>
-                <span className="text-white font-semibold">{totalPC}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span className="text-gray-300">Streaming:</span>
-                <span className="text-white font-semibold">{totalPC}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span className="text-gray-300">Offline:</span>
-                <span className="text-white font-semibold">0</span>
-              </div>
-              {/* <div className="ml-auto flex items-center gap-2">
-              <span className="text-gray-300">Last Updated:</span>
-              <span className="text-white font-semibold">Just now</span>
-            </div> */}
-            </div>
-          </div>
-        )}
-
         {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto bg-gray-900">
           <div className="p-2 max-w-[1800px] mx-auto">
-            {/* Dashboard Header */}
-
-            {/* Grid Container */}
-            <div className="">
-              <Outlet />
-            </div>
+            {/* Pass selectedOrg as prop to the outlet pages */}
+            <Outlet context={{ selectedOrg, setSelectedOrg }} />
           </div>
         </main>
       </div>
