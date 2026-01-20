@@ -20,6 +20,7 @@ interface NetworkUsage {
 
 interface Props {
   pc: string;
+  user: string;
   cpu: number;
   ram: number;
   disk: number;
@@ -30,6 +31,7 @@ interface Props {
 
 export default function LiveCard({
   pc,
+  user,
   cpu,
   ram,
   disk,
@@ -192,7 +194,7 @@ export default function LiveCard({
           }`}
         >
           <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full">
-            <span className="text-xs font-bold text-white">{pc}</span>
+            <span className="text-xs font-bold text-white">{user}</span>
           </div>
         </div>
 

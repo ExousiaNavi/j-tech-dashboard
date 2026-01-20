@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
 
+  console.log(clients)
   // Clear error/success messages after timeout
   useEffect(() => {
     if (errorMessage || successMessage) {

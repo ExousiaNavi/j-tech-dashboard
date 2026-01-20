@@ -98,14 +98,14 @@ export default function SystemStatusCard({
         alert.toLowerCase().includes("critical") ||
         alert.toLowerCase().includes("low disk") ||
         ram >= 90 ||
-        cpu >= 90
+        cpu >= 90,
     );
     setHasCriticalAlert(critical);
   }, [alerts, cpu, ram]);
 
   const confirmCommand = (
     type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent",
-    action: () => void
+    action: () => void,
   ) => {
     setPendingCommand({ type, action });
     setShowConfirmDialog(true);
@@ -213,8 +213,10 @@ export default function SystemStatusCard({
               )}
             </div>
             <div className="text-gray-400 text-sm">
-              User: {user} 
-              <span className="block">OS: {os} {os_version}</span>
+              User: {user}
+              <span className="block">
+                OS: {os} {os_version}
+              </span>
             </div>
             <div className="text-gray-400 text-sm">IP Address: {ip}</div>
           </div>
@@ -237,8 +239,16 @@ export default function SystemStatusCard({
                 onClick={() => setShowAlerts(true)}
                 className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm rounded-lg transition-colors flex items-center space-x-2"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span>Show alert</span>
               </button>
@@ -615,7 +625,7 @@ export default function SystemStatusCard({
                       ).toFixed(1)} MB/s`
                     : `${Math.max(
                         network.upload_kbps,
-                        network.download_kbps
+                        network.download_kbps,
                       )} KB/s`}
                 </div>
               </div>
@@ -652,7 +662,7 @@ export default function SystemStatusCard({
                     style={{
                       width: `${Math.min(
                         100,
-                        (network.download_kbps / 10000) * 100
+                        (network.download_kbps / 10000) * 100,
                       )}%`,
                     }}
                   />
@@ -674,7 +684,7 @@ export default function SystemStatusCard({
                     style={{
                       width: `${Math.min(
                         100,
-                        (network.upload_kbps / 10000) * 100
+                        (network.upload_kbps / 10000) * 100,
                       )}%`,
                     }}
                   />
@@ -702,15 +712,21 @@ export default function SystemStatusCard({
                   />
                 </svg>
               </div>
-              <div className="">
+              <div>
                 <div className="text-xs font-semibold text-gray-400 mb-1">
                   Uptime
                 </div>
                 <div className="text-sm text-gray-300">
-                  {uptime.uptime_hours.toFixed(1)} hours
+                  {(() => {
+                    // Convert total hours to hours + minutes
+                    const totalMinutes = Math.floor(uptime.uptime_hours * 60);
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    return `${hours}h ${minutes}m`;
+                  })()}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  Boot: {new Date(uptime.boot_time).toLocaleDateString()}
+                  Started: {new Date(uptime.boot_time).toLocaleString()}
                 </div>
               </div>
             </div>
@@ -745,7 +761,7 @@ export default function SystemStatusCard({
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
                   {Object.values(network_interfaces).find(
-                    (ni) => ni.up && ni.speed > 0
+                    (ni) => ni.up && ni.speed > 0,
                   )?.speed || 0}{" "}
                   Mbps max
                 </div>
@@ -822,8 +838,8 @@ export default function SystemStatusCard({
                           d.usage_percent >= 90
                             ? "bg-red-500/20 text-red-300"
                             : d.usage_percent >= 80
-                            ? "bg-yellow-500/20 text-yellow-300"
-                            : "bg-green-500/20 text-green-300"
+                              ? "bg-yellow-500/20 text-yellow-300"
+                              : "bg-green-500/20 text-green-300"
                         }`}
                       >
                         {d.usage_percent}%
@@ -835,8 +851,8 @@ export default function SystemStatusCard({
                           d.usage_percent >= 90
                             ? "bg-gradient-to-r from-red-600 to-red-400"
                             : d.usage_percent >= 80
-                            ? "bg-gradient-to-r from-yellow-600 to-yellow-400"
-                            : "bg-gradient-to-r from-green-600 to-green-400"
+                              ? "bg-gradient-to-r from-yellow-600 to-yellow-400"
+                              : "bg-gradient-to-r from-green-600 to-green-400"
                         }`}
                         style={{ width: `${d.usage_percent}%` }}
                       />
@@ -883,8 +899,8 @@ export default function SystemStatusCard({
                           process.cpu_percent > 30
                             ? "bg-red-500/20 text-red-300"
                             : process.cpu_percent > 10
-                            ? "bg-yellow-500/20 text-yellow-300"
-                            : "bg-blue-500/20 text-blue-300"
+                              ? "bg-yellow-500/20 text-yellow-300"
+                              : "bg-blue-500/20 text-blue-300"
                         }`}
                       >
                         CPU: {process.cpu_percent.toFixed(1)}%

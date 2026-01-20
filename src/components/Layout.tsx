@@ -8,10 +8,12 @@ import {
   MdInfo,
   MdBusiness,
   MdMonitor,
+  MdLogout
 } from "react-icons/md";
 // import { IoMdRefreshCircle } from "react-icons/io";
 import { useTotalPC } from "../hooks/useTotalPC";
 import { useOrg } from "../context/OrgContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,6 +26,9 @@ export default function Layout() {
   const isSystemStatusPage = location.pathname === "/system-status";
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { user, logout } = useAuth(); // <-- get logout function
+  const [open, setOpen] = useState(false);
 
   // Auto-select first org when savedOrgs changes and we're on system-status page
   useEffect(() => {
@@ -124,7 +129,6 @@ export default function Layout() {
                     <MdMonitor className="text-white" />
                     <span className="text-sm truncate">System Monitoring</span>
                   </div>
-                  
                 </NavLink>
               </li>
             </ul>
@@ -158,42 +162,46 @@ export default function Layout() {
               <p className="text-xs text-gray-500">No organizations found</p>
             ) : (
               <ul className="space-y-1">
-                {savedOrgs.map((org) => (
-                  <li key={org.id}>
-                    <NavLink
-                      to="/system-status"
-                      state={{ orgId: org.id }}
-                      className={({ isActive }) =>
-                        `w-full flex items-center bg-gray-800/10 justify-between px-3 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                          isActive && selectedOrg === org.id
-                            ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
-                            : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-                        }`
-                      }
-                      title={`${org.agents?.length || 0} agents`}
-                      onClick={() => setSelectedOrg(org.id)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            (org.agents?.length ?? 0) > 0
-                              ? "bg-green-500"
-                              : "bg-red-500"
-                          }`}
-                        />
-
-                        <span className="text-sm truncate">{org.name}</span>
-                      </div>
-                      <span
-                        className={`text-xs px-1.5 py-0.5 rounded ${
-                          selectedOrg === org.id ? "bg-white/20" : "bg-gray-800"
-                        }`}
+                {[...savedOrgs]
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((org) => (
+                    <li key={org.id}>
+                      <NavLink
+                        to="/system-status"
+                        state={{ orgId: org.id }}
+                        className={({ isActive }) =>
+                          `w-full flex items-center bg-gray-800/10 justify-between px-3 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                            isActive && selectedOrg === org.id
+                              ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                              : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                          }`
+                        }
+                        title={`${org.agents?.length || 0} agents`}
+                        onClick={() => setSelectedOrg(org.id)}
                       >
-                        {org.agents?.length || 0}
-                      </span>
-                    </NavLink>
-                  </li>
-                ))}
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              (org.agents?.length ?? 0) > 0
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
+                          />
+
+                          <span className="text-sm truncate">{org.name}</span>
+                        </div>
+                        <span
+                          className={`text-xs px-1.5 py-0.5 rounded ${
+                            selectedOrg === org.id
+                              ? "bg-white/20"
+                              : "bg-gray-800"
+                          }`}
+                        >
+                          {org.agents?.length || 0}
+                        </span>
+                      </NavLink>
+                    </li>
+                  ))}
               </ul>
             )}
           </div>
@@ -241,26 +249,35 @@ export default function Layout() {
             </h1>
             {selectedOrg && isSystemStatusPage && (
               <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-gray-700/50 rounded-lg">
-                <MdBusiness className="text-red-400 text-sm" />
+                <MdBusiness className="text-green-400 text-sm" />
                 <span className="text-sm text-gray-200">
                   {savedOrgs.find((o) => o.id === selectedOrg)?.name}
                 </span>
               </div>
             )}
           </div>
+
           <div className="flex items-center gap-4">
             <div className="relative">
-              <button className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+              {/* Avatar + Name button */}
+              <button
+                onClick={() => setOpen(!open)}
+                className="flex items-center gap-3 p-2 hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+              >
                 <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">AD</span>
+                  <span className="text-white text-sm font-semibold">
+                    {user?.username?.[0].toUpperCase() || "U"}
+                  </span>
                 </div>
                 <div className="text-left hidden md:flex md:flex-col">
                   <p className="text-sm font-medium text-white">
-                    Admin Dashboard
+                    {user?.username || "Admin Dashboard"}
                   </p>
                 </div>
                 <svg
-                  className="w-4 h-4 text-gray-400"
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                    open ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -273,6 +290,19 @@ export default function Layout() {
                   />
                 </svg>
               </button>
+
+              {/* Dropdown */}
+              {open && (
+                <div className="absolute right-0 mt-2 w-32 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 p-2">
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-2 bg-gray-500/10 w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-red-600 hover:text-white rounded-md transition-colors"
+                  >
+                    <MdLogout />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </nav>
