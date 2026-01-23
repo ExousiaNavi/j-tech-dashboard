@@ -89,7 +89,7 @@ export default function SystemStatusCard({
   const [msgOpen, setMsgOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingCommand, setPendingCommand] = useState<{
-    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
+    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent" | "message";
     action: () => void;
   } | null>(null);
   const [showAlerts, setShowAlerts] = useState(true);
@@ -170,7 +170,7 @@ export default function SystemStatusCard({
         </div>
       )}
       {/* ALERT BANNER - Immediately visible */}
-      {alerts.length > 0 && showAlerts && expired && (
+      {alerts.length > 0 && showAlerts && !expired && (
         <div
           className={`${
             hasCriticalAlert

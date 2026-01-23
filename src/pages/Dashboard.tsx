@@ -4,6 +4,10 @@ import LiveCard from "../components/LiveCard";
 import { useWS } from "../context/WebSocketContext";
 import { API_URL } from "../config";
 import { useOrg } from "../context/OrgContext";
+import BroadcastPopup from "../components/BroadcastPopup";
+// import { sendCommand, sendMessageToAll } from "../helpers/liveCardHelpers";
+import { broadcastCommand, sendMessageToAll } from "../helpers/broadcastHelpers";
+
 
 export default function Dashboard() {
   const { clients } = useWS();
@@ -19,6 +23,7 @@ export default function Dashboard() {
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
 
   const OFFLINE_CPU = 0;
   const OFFLINE_RAM = 0;
@@ -31,7 +36,7 @@ export default function Dashboard() {
   };
 
   console.log(clients);
-  console.log(savedOrgs)
+  console.log(savedOrgs);
   useEffect(() => {
     setAutoConnectVideo(true);
   });
@@ -85,6 +90,18 @@ export default function Dashboard() {
       setOrgFilter(dynamicOrgs[0]);
     }
   }, [dynamicOrgs, orgFilter]);
+
+  // Commands
+    const sendSleepCommand = () => broadcastCommand(API_URL, "sleep");
+    const sendLockCommand = () => broadcastCommand(API_URL, "lock");
+    const sendRestartCommand = () => broadcastCommand(API_URL, "restart");
+    const sendShutdownCommand = () => broadcastCommand(API_URL, "shutdown");
+    const sendRestartAgentCommand = () => broadcastCommand(API_URL, "restart_agent");
+  
+    // Messages
+    // const handleSendMessage = (message: string) => sendMessageToAll(api, pc, message);
+    const handleSendMessageToAll = (message: string) =>
+      sendMessageToAll(API_URL, message);
 
   // Filter clients to only show visible ones and match org filter
   const displayClients = useMemo(() => {
@@ -196,61 +213,58 @@ export default function Dashboard() {
   };
 
   // Total registered PCs (all orgs)
-const totalPCs = savedOrgs.reduce(
-  (sum, org) => sum + (org.agents?.length ?? 0),
-  0
-);
+  const totalPCs = savedOrgs.reduce(
+    (sum, org) => sum + (org.agents?.length ?? 0),
+    0,
+  );
 
-// Currently connected PCs (from websocket)
-const onlinePCs = Object.keys(clients).length;
+  // Currently connected PCs (from websocket)
+  const onlinePCs = Object.keys(clients).length;
 
-// Offline PCs (never go below 0)
-const offlinePCs = Math.max(totalPCs - onlinePCs, 0);
+  // Offline PCs (never go below 0)
+  const offlinePCs = Math.max(totalPCs - onlinePCs, 0);
 
   // const onlinePCs = Object.values(clients).filter(c => c.online).length;
 
   const registeredAgents = savedOrgs
-  .filter(org => !orgFilter || org.id === orgFilter)
-  .flatMap(org =>
-    (org.agents ?? []).map(agent => ({
-      pc: agent,
-      org: org.id,
-    }))
-  );
+    .filter((org) => !orgFilter || org.id === orgFilter)
+    .flatMap((org) =>
+      (org.agents ?? []).map((agent) => ({
+        pc: agent,
+        org: org.id,
+      })),
+    );
 
+  const allRenderedClients = registeredAgents.map((regAgent) => {
+    const liveClient = displayClients.find((c) => c.pc === regAgent.pc);
 
-const allRenderedClients = registeredAgents.map(regAgent => {
-  const liveClient = displayClients.find(
-    c => c.pc === regAgent.pc
-  );
+    if (liveClient) {
+      return {
+        ...liveClient,
+        user: liveClient.user ?? regAgent.pc, // ✅ GUARANTEED STRING
+        isOffline: false,
+      };
+    }
 
-  if (liveClient) {
     return {
-      ...liveClient,
-      user: liveClient.user ?? regAgent.pc, // ✅ GUARANTEED STRING
-      isOffline: false,
+      pc: regAgent.pc,
+      org: regAgent.org,
+      user: regAgent.pc,
+      expired: false,
+      license: false,
+      isOffline: true,
+      // status: "offline",
+
+      cpu: OFFLINE_CPU,
+      ram: OFFLINE_RAM,
+      disk: OFFLINE_DISK,
+      network: OFFLINE_NETWORK,
     };
-  }
+  });
 
-  return {
-    pc: regAgent.pc,
-    org: regAgent.org,
-    user: regAgent.pc,
-    expired: false,
-    license: false,
-    isOffline: true,
-    // status: "offline",
-
-    cpu: OFFLINE_CPU,
-    ram: OFFLINE_RAM,
-    disk: OFFLINE_DISK,
-    network: OFFLINE_NETWORK,
-  };
-});
-
-const finalClients = allRenderedClients.filter(pc =>
-  pc.pc.toLowerCase().includes(searchQuery.toLowerCase())
-);
+  const finalClients = allRenderedClients.filter((pc) =>
+    pc.pc.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <div className="space-y-6 bg-gradient-to-br from-gray-900 to-black min-h-screen">
@@ -405,6 +419,32 @@ const finalClients = allRenderedClients.filter(pc =>
 
               {/* Create Org - Same width as filter buttons */}
               <div className="flex items-center gap-2 w-full lg:w-auto">
+                {/* Broadcast command */}
+                <div className="shrink-0">
+                  <button
+                    onClick={() => setIsBroadcastOpen(true)}
+                    // disabled={disabled} // disable the dropdown itself
+                    className={`w-full px-3 py-1.5 bg-gray-800 rounded-lg text-sm font-medium text-white transition-colors flex items-center space-x-2
+                    `}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                      />
+                    </svg>
+                    <span>Broadcast Command</span>
+                  </button>
+                  
+                </div>
+
                 <div className="relative flex items-center w-full lg:w-[200px]">
                   <div className="absolute left-3">
                     <svg
@@ -470,7 +510,17 @@ const finalClients = allRenderedClients.filter(pc =>
                 </div>
               </div>
             </div>
-
+            
+            <BroadcastPopup
+              isBroadcastOpen={isBroadcastOpen}
+              onClose={() => setIsBroadcastOpen(false)}
+              onLock={sendLockCommand}
+              onSleep={sendSleepCommand}
+              onRestart={sendRestartCommand}
+              onRestartAgent={sendRestartAgentCommand}
+              onShutdown={sendShutdownCommand}
+              onSendToAll={handleSendMessageToAll}
+            />
             {/* Error/Success Messages */}
             {(errorMessage || successMessage) && (
               <div className="flex flex-col gap-1">
@@ -602,7 +652,6 @@ const finalClients = allRenderedClients.filter(pc =>
               api={API_URL}
               autoConnect={autoConnectVideo}
             />
-
           ))}
         </div>
       ) : (

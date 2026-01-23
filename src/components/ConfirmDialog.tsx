@@ -1,5 +1,5 @@
 type PendingCommand = {
-  type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
+  type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent" | "message";
   action: () => void;
 };
 

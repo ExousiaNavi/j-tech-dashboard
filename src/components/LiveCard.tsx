@@ -49,7 +49,7 @@ export default function LiveCard({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showCommandsMenu, setShowCommandsMenu] = useState(false);
   const [pendingCommand, setPendingCommand] = useState<{
-    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent";
+    type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent" | "message";
     action: () => void;
   } | null>(null);
   const [showControls, setShowControls] = useState(true);

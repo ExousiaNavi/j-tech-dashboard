@@ -1,25 +1,23 @@
 import { useState } from "react";
 
 interface Props {
-  pc: string;
   open: boolean;
   onClose: () => void;
-  onSend: (msg: string) => void;
   onSendToAll: (msg: string) => void;
 }
 
-export default function MessageModal({ pc, open, onClose, onSend, onSendToAll }: Props) {
+export default function MessageModalAll({ open, onClose, onSendToAll }: Props) {
   const [text, setText] = useState("");
-  
-  if (!open) return null;
 
+  if (!open) return null;
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
       <div className="bg-gray-900 w-[90%] md:w-[30%] rounded-lg shadow-lg overflow-hidden">
         
         {/* Header */}
         <div className="bg-red-600 px-4 py-3 text-white font-bold">
-          Send Message to {pc}
+          Broadcast Message to all connected device
         </div>
 
         {/* Body */}
@@ -44,23 +42,12 @@ export default function MessageModal({ pc, open, onClose, onSend, onSendToAll }:
           <button
             className="flex items-center gap-1 px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white"
             onClick={() => {
-              onSend(text);
-              setText("");
-              onClose();
-            }}
-          >
-            Send <span className="hidden md:flex">Message</span>
-          </button>
-
-          <button
-            className="flex items-center gap-1 px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white"
-            onClick={() => {
               onSendToAll(text);
               setText("");
               onClose();
             }}
           >
-            Broadcast <span className="hidden md:flex">to All</span>
+            Broadcast
           </button>
         </div>
 
