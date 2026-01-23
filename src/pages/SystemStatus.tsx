@@ -1,13 +1,18 @@
 // pages/SystemStatus.tsx
-import { useEffect, useState } from "react";
-import { useWebSocket } from "../hooks/useWebSocket";
-import { WS_URL, API_URL } from "../config";
+import { useState, useEffect } from "react";
+// import { useWebSocket } from "../hooks/useWebSocket";
+import { API_URL } from "../config";
 import SystemStatusCard from "../components/SystemStatusCard";
 import { useWS } from "../context/WebSocketContext";
 import { useOutletContext } from "react-router-dom"; // ✅ correct
+import { useOrganizations } from "../hooks/useOrganizations";
+import { useDeleteOrganization } from "../hooks/useDeleteOrganization";
+import DeleteOrgConfirmDialog from "../components/DeleteOrgConfirmDialog";
+import { useOrg } from "../context/OrgContext";
 
 interface OutletContext {
   selectedOrg: string | null;
+  setSelectedOrg: (org: string | null) => void;
 }
 
 interface NetworkUsage {
@@ -50,6 +55,7 @@ interface GPU {
 }
 
 interface PCStatus {
+  expired: boolean;
   pc: string;
   ip: string;
   os: string;
@@ -86,10 +92,20 @@ export default function SystemStatus() {
 
   const connectedClients = Object.values(clients);
   console.log(connectedClients);
+  const { orgs } = useOrg();
+  const { selectedOrg, setSelectedOrg } = useOutletContext<OutletContext>();
 
-  const { selectedOrg } = useOutletContext<OutletContext>();
+  console.log(selectedOrg, orgs);
 
-  console.log(selectedOrg);
+  const { deleteOrg } = useOrganizations();
+  const {
+    showDeleteDialog,
+    setShowDeleteDialog,
+    pendingDelete,
+    setPendingDelete,
+    requestDelete,
+  } = useDeleteOrganization();
+
   // Filter clients based on criteria
   // const filteredClients = connectedClients.filter((client) => {
   //   if (filter === "high-load") return client.cpu > 80 || client.ram > 80;
@@ -101,12 +117,17 @@ export default function SystemStatus() {
   //   return true;
   // });
 
+  // Auto-select first org if none is selected
+  useEffect(() => {
+    if (!selectedOrg && orgs.length > 0) {
+      setSelectedOrg(orgs[0].id);
+    }
+  }, [orgs, selectedOrg, setSelectedOrg]);
+
   // Filter clients based on criteria + selectedOrg
   const filteredClients = connectedClients.filter((client) => {
-    // First, filter by selectedOrg if set
     if (selectedOrg && client.org_id !== selectedOrg) return false;
 
-    // Then filter by user-selected filter
     if (filter === "high-load") return client.cpu > 80 || client.ram > 80;
     if (filter === "alerts") return client.alerts.length > 0;
     if (filter === "windows")
@@ -114,7 +135,8 @@ export default function SystemStatus() {
     if (filter === "linux") return client.os.toLowerCase().includes("linux");
     if (filter === "mac") return client.os.toLowerCase().includes("mac");
 
-    return true; // default: show all
+    // Show all by default
+    return filter === "all" || filter === "not-connected";
   });
 
   // Sort clients
@@ -146,7 +168,7 @@ export default function SystemStatus() {
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="w-full">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-2">
               System Monitoring
               {/* <span className="w-fit ml-4 text-sm px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full font-normal">
                 {totalClients} active system{totalClients !== 1 ? "s" : ""}
@@ -158,28 +180,42 @@ export default function SystemStatus() {
           </div>
 
           <div className="flex items-center justify-end space-x-4 w-full">
-            <div className="relative w-full lg:w-auto">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Search systems..."
-                className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
+            <button
+              disabled={!selectedOrg || selectedOrg === "Unassigned"}
+              onClick={() => {
+                if (!selectedOrg) return;
+
+                requestDelete(selectedOrg, async () => {
+                  const res = await deleteOrg(selectedOrg);
+
+                  if (res.last_org) {
+                    setSelectedOrg(res.last_org);
+                  } else {
+                    setSelectedOrg("Unassigned");
+                  }
+                });
+              }}
+              className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-medium
+              bg-red-600 hover:bg-red-700 text-white transition-colors
+              disabled:bg-red-400 disabled:cursor-not-allowed
+            `}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Delete Organization
+            </button>
           </div>
         </div>
 
@@ -341,6 +377,17 @@ export default function SystemStatus() {
               >
                 With Alerts
               </button>
+
+              <button
+                onClick={() => setFilter("not-connected")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  filter === "not-connected"
+                    ? "bg-red-500 text-white"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                Not Connected
+              </button>
             </div>
             <div className="relative w-full">
               <select
@@ -385,7 +432,7 @@ export default function SystemStatus() {
       </div>
 
       {/* Systems Grid */}
-      {sortedClients.length === 0 ? (
+      {/* {sortedClients.length === 0 ? (
         <div className="text-center py-16">
           <div className="max-w-md mx-auto">
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
@@ -445,7 +492,126 @@ export default function SystemStatus() {
             />
           ))}
         </div>
-      )}
+      )} */}
+      {/* Systems Grid */}
+      {(() => {
+        if (!selectedOrg) return null;
+
+        // Find the org object
+        const org = orgs.find((o) => o.id === selectedOrg);
+        if (!org) return null;
+
+        const hasConnectedClients = sortedClients.length > 0;
+        const hasOrgAgents = (org.agents || []).length > 0;
+
+        // Show "No systems found" only if both are empty
+        if (!hasConnectedClients && !hasOrgAgents) {
+          return (
+            <div className="text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <svg
+                    className="w-12 h-12 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                  No systems found
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  {filter === "all"
+                    ? "Waiting for agent PCs to connect..."
+                    : "No systems match the current filter"}
+                </p>
+                {filter !== "all" && (
+                  <button
+                    onClick={() => setFilter("all")}
+                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Show All Systems
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        // Otherwise, show all agents (connected or placeholder)
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {(org.agents || []).map((agentName) => {
+              const client = sortedClients.find((c) => c.pc === agentName);
+              const status = client ? "Connected" : "Not Connected";
+              // Filter: if user wants Not Connected only
+              if (filter === "not-connected" && status !== "Not Connected")
+                return null;
+              if (filter !== "not-connected" && filter !== "all" && !client)
+                return null;
+
+              if (client) {
+                return (
+                  <SystemStatusCard
+                    expired={client.expired}
+                    key={client.pc}
+                    pc={client.pc}
+                    ip={client.ip}
+                    os={client.os}
+                    os_version={client.os_version}
+                    user={client.user}
+                    cpu={client.cpu}
+                    ram={client.ram}
+                    disk={client.disk}
+                    network={client.network}
+                    network_interfaces={client.network_interfaces}
+                    uptime={client.uptime}
+                    top_processes={client.top_processes}
+                    disks={client.disks}
+                    alerts={client.alerts}
+                    gpu={client.gpu}
+                    api={API_URL}
+                    status={status}
+                  />
+                );
+              }
+
+              // Placeholder card
+              return (
+                <SystemStatusCard
+                  expired={false}
+                  key={agentName}
+                  pc={agentName}
+                  ip="N/A"
+                  os="Unknown"
+                  os_version="Unknown"
+                  user="N/A"
+                  cpu={0}
+                  ram={0}
+                  disk={0}
+                  network={{ upload_kbps: 0, download_kbps: 0 }}
+                  network_interfaces={{}}
+                  uptime={{ boot_time: "-", uptime_hours: 0 }}
+                  top_processes={[]}
+                  disks={[]}
+                  alerts={[]}
+                  gpu={[]}
+                  api={API_URL}
+                  status={status}
+                  // isPlaceholder={true} // optional
+                />
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Footer Stats */}
       <div className="mt-8 pt-6 border-t border-gray-800/50">
@@ -487,6 +653,20 @@ export default function SystemStatus() {
           </div>
         </div>
       </div>
+
+      <DeleteOrgConfirmDialog
+        show={showDeleteDialog}
+        orgId={pendingDelete?.orgId || null}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (pendingDelete) pendingDelete.action();
+          setShowDeleteDialog(false);
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }

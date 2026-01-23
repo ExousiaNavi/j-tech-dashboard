@@ -46,6 +46,7 @@ interface Uptime {
 }
 
 interface Props {
+  expired: boolean;
   pc: string;
   ip: string;
   os: string;
@@ -62,9 +63,11 @@ interface Props {
   alerts: string[];
   gpu: GPU[];
   api: string;
+  status: "Connected" | "Not Connected";
 }
 
 export default function SystemStatusCard({
+  expired,
   pc,
   ip,
   os,
@@ -81,6 +84,7 @@ export default function SystemStatusCard({
   alerts,
   gpu,
   api,
+  status,
 }: Props) {
   const [msgOpen, setMsgOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -90,6 +94,7 @@ export default function SystemStatusCard({
   } | null>(null);
   const [showAlerts, setShowAlerts] = useState(true);
   const [hasCriticalAlert, setHasCriticalAlert] = useState(false);
+  const disabled = status === "Not Connected";
 
   useEffect(() => {
     // Check for critical alerts
@@ -124,9 +129,48 @@ export default function SystemStatusCard({
     sendMessageToAll(api, pc, message);
 
   return (
-    <div className="bg-gray-900 rounded-xl shadow-2xl border border-gray-800 w-full overflow-hidden">
+    <div className="relative bg-gray-900 rounded-xl shadow-2xl border border-gray-800 w-full overflow-hidden">
+      {/* EXPIRED OVERLAY */}
+      {expired && (
+        <div className="absolute inset-0 bg-red-900/40 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-6">
+          {/* Warning Icon */}
+          <svg
+            className="w-16 h-16 text-red-400 mb-4 animate-pulse"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {/* Wider triangle */}
+            <polygon
+              points="12,3 21,19 3,19"
+              stroke="currentColor"
+              strokeWidth="2"
+              fill="none"
+            />
+            {/* Exclamation mark */}
+            <line
+              x1="12"
+              y1="10"
+              x2="12"
+              y2="14"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <circle cx="12" cy="16.5" r="1" fill="currentColor" />
+          </svg>
+
+          <h2 className="text-4xl font-bold text-red-100 mb-2">
+            License Expired
+          </h2>
+          <p className="text-gray-300 text-sm">
+            This PC cannot be controlled or monitored until a valid license is
+            applied.
+          </p>
+        </div>
+      )}
       {/* ALERT BANNER - Immediately visible */}
-      {alerts.length > 0 && showAlerts && (
+      {alerts.length > 0 && showAlerts && expired && (
         <div
           className={`${
             hasCriticalAlert
@@ -204,13 +248,33 @@ export default function SystemStatusCard({
       <div className="p-6">
         <div className="flex flex-col lg:flex-row justify-between items-start">
           <div className="w-full">
-            <div className="flex items-center space-x-3 mb-2">
-              <h1 className="text-white font-bold text-xl shrink-0">{pc}</h1>
+            <div className="flex items-center gap-1">
+              <span
+                className={`${expired ? "flex" : "hidden"} px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${
+                  expired ? "bg-red-700/20 text-red-300" : ""
+                }`}
+              >
+                {expired ? "Expired" : ""}
+              </span>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold shrink-0 ${
+                  status === "Connected"
+                    ? "bg-green-500/20 text-green-300"
+                    : "bg-red-500/20 text-red-300"
+                }`}
+              >
+                {status}
+              </span>
               {(ram >= 90 || cpu >= 90 || alerts.length > 0) && (
                 <span className="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded-full border border-red-500/30">
-                  CRITICAL
+                  Critical
                 </span>
               )}
+            </div>
+            <div className="flex items-center space-x-1 mb-2">
+              <h1 className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent font-bold text-xl shrink-0">
+                {pc}
+              </h1>
             </div>
             <div className="text-gray-400 text-sm">
               User: {user}
@@ -237,7 +301,9 @@ export default function SystemStatusCard({
             <div className="flex flex-row md:flex-col  gap-2">
               <button
                 onClick={() => setShowAlerts(true)}
-                className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm rounded-lg transition-colors flex items-center space-x-2"
+                disabled={disabled}
+                className={`bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 rounded-lg transition 
+                    ${disabled ? "opacity-40 cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-800/70"}`}
               >
                 <svg
                   className="w-4 h-4"
@@ -254,7 +320,11 @@ export default function SystemStatusCard({
               </button>
 
               <div className="relative group">
-                <button className="w-full px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium text-white transition-colors flex items-center space-x-2">
+                <button
+                  disabled={disabled} // disable the dropdown itself
+                  className={`w-full px-3 py-1.5 bg-gray-800 rounded-lg text-sm font-medium text-white transition-colors flex items-center space-x-2
+                    ${disabled ? "opacity-40 cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-700"}`}
+                >
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -273,7 +343,9 @@ export default function SystemStatusCard({
                 <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                   <button
                     onClick={() => confirmCommand("lock", sendLockCommand)}
-                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                    disabled={disabled}
+                    className={`bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 rounded-lg transition 
+          ${disabled ? "cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-800/70"}`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-yellow-900/30 flex items-center justify-center">
                       <svg
@@ -300,7 +372,9 @@ export default function SystemStatusCard({
 
                   <button
                     onClick={() => confirmCommand("sleep", sendSleepCommand)}
-                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                    disabled={disabled}
+                    className={`bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 rounded-lg transition 
+          ${disabled ? "cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-800/70"}`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center">
                       <svg
@@ -327,7 +401,9 @@ export default function SystemStatusCard({
                     onClick={() =>
                       confirmCommand("restart", sendRestartCommand)
                     }
-                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                    disabled={disabled}
+                    className={`bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 rounded-lg transition 
+          ${disabled ? "cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-800/70"}`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-purple-900/30 flex items-center justify-center">
                       <svg
@@ -383,7 +459,9 @@ export default function SystemStatusCard({
                     onClick={() =>
                       confirmCommand("shutdown", sendShutdownCommand)
                     }
-                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                    disabled={disabled}
+                    className={`bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 rounded-lg transition 
+          ${disabled ? "cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-800/70"}`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-red-900/30 flex items-center justify-center">
                       <svg
@@ -410,7 +488,9 @@ export default function SystemStatusCard({
 
                   <button
                     onClick={() => setMsgOpen(true)}
-                    className="bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800/70 rounded-lg transition"
+                    disabled={disabled}
+                    className={`bg-gray-800/50 w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-300 rounded-lg transition 
+          ${disabled ? "cursor-not-allowed hover:bg-gray-800/50" : "hover:bg-gray-800/70"}`}
                   >
                     <div className="w-8 h-8 rounded-lg bg-pink-900/30 flex items-center justify-center">
                       <svg

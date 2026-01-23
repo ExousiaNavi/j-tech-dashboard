@@ -10,6 +10,18 @@ import { WebSocketProvider } from "./context/WebSocketContext";
 import { OrgProvider } from "./context/OrgContext";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
+import Reports from "./pages/Report";
+
+// Disable all logs in production
+if (!import.meta.env.DEV) {
+  console.log = () => {};
+  console.info = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  console.debug = () => {};
+}
+
+
 
 function App() {
   return (
@@ -29,6 +41,7 @@ function App() {
               >
                 <Route index element={<Dashboard />} />
                 <Route path="system-status" element={<SystemStatus />} />
+                <Route path="report" element={<Reports />} />
               </Route>
             </Routes>
           </OrgProvider>

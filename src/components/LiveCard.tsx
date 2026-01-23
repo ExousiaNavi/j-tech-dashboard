@@ -19,6 +19,8 @@ interface NetworkUsage {
 }
 
 interface Props {
+  expired: boolean;
+  isOffline: boolean;
   pc: string;
   user: string;
   cpu: number;
@@ -30,6 +32,8 @@ interface Props {
 }
 
 export default function LiveCard({
+  expired,
+  isOffline,
   pc,
   user,
   cpu,
@@ -63,11 +67,16 @@ export default function LiveCard({
     showPlayButton,
     handleManualPlay,
     toggleVideo,
-  } = useWebRTC(pc, autoConnect);
+  } = useWebRTC(pc, autoConnect && !expired && !isOffline);
 
   const handleToggleVideo = () => {
     toggleVideo(); // existing function from useWebRTC
     // setIsStopped(!showVideo); // if video was on, now it's stopped
+  };
+
+  const guardExpired = (fn: () => void) => {
+    if (expired) return;
+    fn();
   };
 
   //send to target pc
@@ -77,17 +86,22 @@ export default function LiveCard({
   const handleSendMessageToAll = (message: string) =>
     sendMessageToAll(api, pc, message);
 
-  const sendSleepCommand = () => sendCommand(api, pc, "sleep");
-  const sendLockCommand = () => sendCommand(api, pc, "lock");
-  const sendRestartCommand = () => sendCommand(api, pc, "restart");
-  const sendShutdownCommand = () => sendCommand(api, pc, "shutdown");
-  const sendRestartAgentCommand = () => sendCommand(api, pc, "restart_agent");
+  const sendSleepCommand = () =>
+    guardExpired(() => sendCommand(api, pc, "sleep"));
+  const sendLockCommand = () =>
+    guardExpired(() => sendCommand(api, pc, "lock"));
+  const sendRestartCommand = () =>
+    guardExpired(() => sendCommand(api, pc, "restart"));
+  const sendShutdownCommand = () =>
+    guardExpired(() => sendCommand(api, pc, "shutdown"));
+  const sendRestartAgentCommand = () =>
+    guardExpired(() => sendCommand(api, pc, "restart_agent"));
 
   const confirmCommand = (
     type: "sleep" | "lock" | "restart" | "shutdown" | "restart_agent",
-    action: () => void
+    action: () => void,
   ) => {
-    console.log("CLIKED")
+    console.log("CLIKED");
     setPendingCommand({ type, action });
     setShowConfirmDialog(true);
     setShowCommandsMenu(false);
@@ -95,6 +109,10 @@ export default function LiveCard({
 
   const handleToggleFullscreen = () =>
     toggleFullscreen(cardRef.current, isFullscreen);
+
+  useEffect(() => {
+    setShowControls(true);
+  });
 
   // Handle fullscreen change events
   useEffect(() => {
@@ -126,7 +144,11 @@ export default function LiveCard({
 
   const statusText = getStatusText(connectionStatus, showVideo, isVideoActive);
 
-  const statusColor = getStatusColor(connectionStatus, showVideo, isVideoActive);
+  const statusColor = getStatusColor(
+    connectionStatus,
+    showVideo,
+    isVideoActive,
+  );
 
   // Performance label component for fullscreen
   const PerformanceLabel = ({
@@ -173,6 +195,57 @@ export default function LiveCard({
         className="relative w-full"
         style={{ height: isFullscreen ? "100vh" : "310px" }}
       >
+        {isOffline && (
+          <div className="absolute inset-0 z-40 bg-black/90 flex flex-col items-center justify-center">
+            <svg
+              className="w-14 h-14 text-red-500 mb-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+
+            <div className="text-red-400 text-2xl font-bold">
+              Agent is Offline
+            </div>
+
+            <div className="text-gray-300 text-sm mt-1">
+              Please run the agent on the {user}
+            </div>
+          </div>
+        )}
+        {expired && (
+          <div className="absolute inset-0 z-40 bg-black/90 flex flex-col items-center justify-center">
+            <svg
+              className="w-14 h-14 text-red-500 mb-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+
+            <div className="text-red-400 text-2xl font-bold">
+              License Expired
+            </div>
+
+            <div className="text-gray-300 text-sm mt-1">
+              Please renew to regain access
+            </div>
+          </div>
+        )}
+
         {/* Status indicator */}
         <div
           className={`absolute top-4 left-4 z-30 transition-opacity duration-300 ${

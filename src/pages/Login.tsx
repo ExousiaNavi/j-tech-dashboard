@@ -26,7 +26,7 @@ export default function Login() {
     const demoCredentials = {
       admin: { username: "admin@jptech", password: "admin123" },
       instructor: { username: "instructor@jptech", password: "instructor123" },
-      student: { username: "student@jptech", password: "student123" },
+      student: { username: "student-assistant@jptech", password: "student123" },
     };
 
     setUsername(demoCredentials[role].username);
@@ -220,7 +220,7 @@ export default function Login() {
             {/* Quick login buttons for demo */}
             <div className="space-y-3">
               <p className="text-xs text-gray-400 text-center">
-                Quick Access (Demo):
+                School Quick Access (Demo):
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -242,7 +242,7 @@ export default function Login() {
                   onClick={() => handleDemoLogin("student")}
                   className="px-3 py-2 text-xs bg-red-900/10 hover:bg-red-900/30 border border-red-800/10 rounded-lg text-red-300 hover:text-red-200 transition-colors duration-200"
                 >
-                  Student
+                  Student Assistant
                 </button>
               </div>
             </div>

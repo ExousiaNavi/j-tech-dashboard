@@ -37,6 +37,10 @@ export default function Layout() {
     }
   }, [savedOrgs, selectedOrg, isSystemStatusPage]);
 
+  useEffect(() => {
+      handleRefresh()
+  }, [selectedOrg])
+
   const handleRefresh = async () => {
     setIsRefreshing(true); // start spinning
 
@@ -76,7 +80,7 @@ export default function Layout() {
               <span className="text-white text-lg font-bold">JP</span>
             </div>
             <div>
-              <h2 className="text-lg font-bold">JP-TECHNOLOGY</h2>
+              <h2 className="text-lg font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">JP-TECHNOLOGY</h2>
               <p className="text-xs text-gray-400">System Monitoring</p>
             </div>
           </div>
@@ -135,7 +139,7 @@ export default function Layout() {
           </div>
 
           {/* Organization List - Each org links to System Performance */}
-          <div className="mt-6 px-4">
+          <div className="mt-4 px-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <MdBusiness className="text-gray-400" />
@@ -163,7 +167,8 @@ export default function Layout() {
             ) : (
               <ul className="space-y-1">
                 {[...savedOrgs]
-                  .sort((a, b) => a.name.localeCompare(b.name))
+                  // .sort((a, b) => a.name.localeCompare(b.name))
+                  .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
                   .map((org) => (
                     <li key={org.id}>
                       <NavLink
@@ -204,6 +209,39 @@ export default function Layout() {
                   ))}
               </ul>
             )}
+          </div>
+
+
+          <div className="mt-4 px-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <MdDashboard className="text-gray-400" />
+                <h3 className="text-xs font-semibold text-gray-400 uppercase">
+                  Generate Reports
+                </h3>
+              </div>
+            </div>
+
+            <ul className="space-y-1">
+              <li>
+                <NavLink
+                  to="/report"
+                  className={({ isActive }) =>
+                    `w-full flex items-center bg-gray-800/10 justify-between px-3 py-2 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                      isActive
+                        ? "bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg"
+                        : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
+                    }`
+                  }
+                  title={`System Monitoring`}
+                >
+                  <div className="flex items-center gap-2">
+                    <MdMonitor className="text-white" />
+                    <span className="text-sm truncate">Reports</span>
+                  </div>
+                </NavLink>
+              </li>
+            </ul>
           </div>
         </nav>
 
